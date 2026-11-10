@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+name: Bug Report
+description: Report a reproducible problem in pain001-sdk-go
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use synthetic data only. Never paste real account numbers or
+        personal data. Report security issues privately (see SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: pain001-sdk-go version
+      placeholder: "0.0.86"
+    validations:
+      required: true
+  - type: input
+    id: server_version
+    attributes:
+      label: pain001 server version
+      description: The `version` field of GET /api/v1/health.
+      placeholder: "0.0.85"
+    validations:
+      required: true
+  - type: input
+    id: go_version
+    attributes:
+      label: Go version
+      description: Output of `go version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Linux
+        - macOS
+        - Windows
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal Reproducible Example
+      render: go
+    validations:
+      required: true
+  - type: textarea
+    id: error_output
+    attributes:
+      label: Error Output
+    validations:
+      required: true
