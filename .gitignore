@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Build and test output
+/bin/
+/dist/
+*.test
+*.out
+coverage.*
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+node_modules/
