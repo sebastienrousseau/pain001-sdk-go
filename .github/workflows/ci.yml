@@ -34,6 +34,23 @@ jobs:
           cache: false
       - run: make fmt-check vet staticcheck complexity
 
+  vulncheck:
+    name: govulncheck (dependency advisories)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The module is stdlib-only, so govulncheck checks the standard
+    # library of the newest supported Go against the Go vulnerability
+    # database. It needs no secret and fails on any reachable advisory.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+          cache: false
+      - run: make vulncheck
+
   test:
     name: build and unit tests (Go ${{ matrix.go }})
     runs-on: ubuntu-latest

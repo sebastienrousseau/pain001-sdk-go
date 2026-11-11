@@ -8,10 +8,11 @@
 STATICCHECK := honnef.co/go/tools/cmd/staticcheck@v0.8.2
 GOCYCLO     := github.com/fzipp/gocyclo/cmd/gocyclo@v0.6.0
 GOCOGNIT    := github.com/uudashr/gocognit/cmd/gocognit@v1.3.0
+GOVULNCHECK := golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
-.PHONY: check fmt-check fmt vet staticcheck complexity build test conformance example
+.PHONY: check fmt-check fmt vet staticcheck complexity vulncheck build test conformance example
 
-check: fmt-check vet staticcheck complexity build test conformance
+check: fmt-check vet staticcheck complexity vulncheck build test conformance
 
 fmt-check:
 	@out="$$(gofmt -l .)"; if [ -n "$$out" ]; then echo "gofmt needed:"; echo "$$out"; exit 1; fi
@@ -24,6 +25,12 @@ vet:
 
 staticcheck:
 	go run $(STATICCHECK) ./...
+
+# Known vulnerabilities reachable from this module. The client has no
+# third-party dependencies (no go.sum), so this covers the Go standard
+# library and toolchain in use; it needs network access to vuln.go.dev.
+vulncheck:
+	go run $(GOVULNCHECK) ./...
 
 # Cyclomatic <= 10 and cognitive <= 15 per function; size_test.go holds
 # 60 lines per function and 500 per file.
