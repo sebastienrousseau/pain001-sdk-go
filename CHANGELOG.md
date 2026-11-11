@@ -26,4 +26,4 @@ The first release will be 0.0.86, with pain001 0.0.86.
   credit-transfer fixture.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
-  0.0.85 installed from hash-pinned requirements.
+  0.0.86 installed from hash-pinned requirements.

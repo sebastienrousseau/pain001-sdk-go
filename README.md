@@ -82,7 +82,7 @@ talk to.
 - Go 1.26 or newer. CI tests Go 1.26 and 1.27, the two releases the Go
   team supports; the floor moves when 1.26 leaves support.
 - A pain001 server, version 0.0.85 or newer, reachable over HTTP or
-  HTTPS. CI runs the conformance kit against 0.0.85.
+  HTTPS. CI runs the conformance kit against 0.0.86.
 - Pure Go with no cgo, so any platform Go builds for; CI exercises
   Linux, and the tests have also run on macOS (arm64).
 

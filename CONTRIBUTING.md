@@ -20,7 +20,7 @@ the typed tests and the example, start a server and point the tests at
 it:
 
 ```sh
-pip install 'pain001[api]==0.0.85'
+pip install 'pain001[api]==0.0.86'
 pain001 serve --host 127.0.0.1 --port 8000 &
 PAIN001_BASE_URL=http://127.0.0.1:8000 make check
 ```
