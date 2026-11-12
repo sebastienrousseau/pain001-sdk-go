@@ -197,7 +197,7 @@ func TestLoadReadsTheVendoredKit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if k.KitVersion != 1 || len(k.Cases) != 10 || k.Cases[0].ID != "health" {
+	if k.KitVersion != 2 || len(k.Cases) != 14 || k.Cases[0].ID != "health" {
 		t.Errorf("kit_version %d, %d cases, first %q", k.KitVersion, len(k.Cases), k.Cases[0].ID)
 	}
 	for _, c := range k.Cases {
