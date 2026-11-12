@@ -20,10 +20,18 @@ The first release will be 0.0.86, with pain001 0.0.86.
   server's `detail`, with `DetailText` and `Issues` accessors.
 - `MessageType` constants for the 13 message types pain001 0.0.85
   serves.
-- The conformance kit, vendored from core with `SHA256SUMS`, a runner
-  for its cases, and typed tests against a live server.
+- The conformance kit (kit 2, from pain001 0.0.87: 14 cases, including
+  the `422` generate refusals, a bad LEI and a CHAPS purpose code),
+  vendored from core with `SHA256SUMS`, a runner for its cases, and
+  typed tests against a live server.
+- `*RefusalError`, returned by `Generate` when the server refuses the
+  data with `422` and `success: false` (pain001 0.0.87 and later). It
+  wraps the `*APIError`, so `Status` stays 422 and `errors.As` finds
+  either type, and its `Response` carries the decoded
+  `ValidationErrors` and `SchemeViolations`. A nil error from
+  `Generate` now always comes with the XML.
 - `examples/basic`, which generates pain.001.001.09 from the kit's
-  credit-transfer fixture.
+  credit-transfer fixture and prints each finding of a refusal.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
   0.0.86 installed from hash-pinned requirements.

@@ -16,8 +16,13 @@
 //	}
 //	res, err := client.Generate(ctx, csvText, "payments.csv",
 //		pain001.Pain00100109, "")
+//	var refusal *pain001.RefusalError
 //	var apiErr *pain001.APIError
-//	if errors.As(err, &apiErr) {
+//	switch {
+//	case errors.As(err, &refusal):
+//		// refused data: refusal.Response.ValidationErrors,
+//		// refusal.Response.SchemeViolations
+//	case errors.As(err, &apiErr):
 //		// apiErr.Status, apiErr.Detail
 //	}
 //

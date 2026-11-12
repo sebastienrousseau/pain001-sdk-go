@@ -45,15 +45,21 @@ func run() error {
 		return err
 	}
 	res, err := client.Generate(context.Background(), string(content), "payments.csv", pain001.Pain00100109, "")
+	var refusal *pain001.RefusalError
 	var apiErr *pain001.APIError
-	if errors.As(err, &apiErr) {
-		return fmt.Errorf("the server refused the file (HTTP %d): %w", apiErr.Status, err)
-	}
-	if err != nil {
+	switch {
+	case errors.As(err, &refusal):
+		for _, row := range refusal.Response.ValidationErrors {
+			fmt.Fprintf(os.Stderr, "row error: %s: %s\n", row.Field, row.Message)
+		}
+		for _, v := range refusal.Response.SchemeViolations {
+			fmt.Fprintf(os.Stderr, "scheme violation: %v: %v\n", v["rule"], v["message"])
+		}
 		return err
-	}
-	if !res.Success {
-		return fmt.Errorf("generation failed: %s", res.Message)
+	case errors.As(err, &apiErr):
+		return fmt.Errorf("the server refused the request (HTTP %d): %w", apiErr.Status, err)
+	case err != nil:
+		return err
 	}
 	if err := os.WriteFile(*out, []byte(res.XML), 0o600); err != nil {
 		return err

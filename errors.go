@@ -4,6 +4,7 @@ package pain001
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -92,4 +93,54 @@ func newAPIError(status int, raw []byte) *APIError {
 		e.Detail, _ = json.Marshal(strings.ToValidUTF8(string(raw), "�"))
 	}
 	return e
+}
+
+// RefusalError is the 422 Generate returns when the server refuses the
+// data: rows that fail validation or a scheme rule. It wraps the
+// *APIError, so errors.As finds either type and Status stays 422, and
+// Response holds the decoded body with its ValidationErrors and
+// SchemeViolations.
+type RefusalError struct {
+	*APIError
+	Response GenerateResponse
+}
+
+// Error gives the server's message and how many findings it carries,
+// never the findings themselves, whose messages can quote the input.
+func (e *RefusalError) Error() string {
+	return fmt.Sprintf("pain001: HTTP %d: %s (%s, %s)", e.Status, e.Response.Message,
+		plural(len(e.Response.ValidationErrors), "validation error"),
+		plural(len(e.Response.SchemeViolations), "scheme violation"))
+}
+
+// Unwrap returns the underlying *APIError.
+func (e *RefusalError) Unwrap() error { return e.APIError }
+
+// plural formats a count with its noun, adding "s" unless it is one.
+func plural(n int, noun string) string {
+	if n == 1 {
+		return "1 " + noun
+	}
+	return fmt.Sprintf("%d %ss", n, noun)
+}
+
+// asRefusal turns a 422 whose body is a generate response with
+// "success": false into a *RefusalError; any other error is returned
+// as is.
+func asRefusal(err error) error {
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) || apiErr.Status != 422 {
+		return err
+	}
+	var body struct {
+		Success *bool `json:"success"`
+	}
+	if json.Unmarshal(apiErr.Detail, &body) != nil || body.Success == nil || *body.Success {
+		return err
+	}
+	refusal := &RefusalError{APIError: apiErr}
+	if json.Unmarshal(apiErr.Detail, &refusal.Response) != nil {
+		return err
+	}
+	return refusal
 }

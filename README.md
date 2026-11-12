@@ -82,7 +82,10 @@ talk to.
 - Go 1.26 or newer. CI tests Go 1.26 and 1.27, the two releases the Go
   team supports; the floor moves when 1.26 leaves support.
 - A pain001 server, version 0.0.85 or newer, reachable over HTTP or
-  HTTPS. CI runs the conformance kit against 0.0.86.
+  HTTPS. The vendored conformance kit (kit 2) is core 0.0.87's, and its
+  refusal cases need a 0.0.87 server. Before 0.0.87 the server answers
+  a refused `Generate` with `200` and `success: false`, which comes back
+  as a `GenerateResponse` rather than a `*RefusalError`.
 - Pure Go with no cgo, so any platform Go builds for; CI exercises
   Linux, and the tests have also run on macOS (arm64).
 
@@ -125,6 +128,22 @@ it, validates every row and returns the XML inline. The fixture is the
 conformance kit's five-transaction credit transfer, so the document
 carries `<NbOfTxs>5</NbOfTxs>`.
 
+When the server refuses the data (rows that fail validation or a scheme
+rule) it answers `422`, and `Generate` returns a `*RefusalError` whose
+`Response` holds the findings:
+
+```go
+var refusal *pain001.RefusalError
+if errors.As(err, &refusal) {
+    for _, row := range refusal.Response.ValidationErrors {
+        fmt.Println(row.Field, row.Message) // $.currency 'EURO' does not match ...
+    }
+    for _, v := range refusal.Response.SchemeViolations {
+        fmt.Println(v["rule"], v["message"])
+    }
+}
+```
+
 ---
 
 ## The pain001-sdk-go ecosystem
@@ -155,7 +174,7 @@ publishes and every client vendors. New to the format?
 | Documents | `Check`: XSD, MDR, scheme and Schematron rungs on existing XML | Supported |
 | Faces | `Faces` and `ProjectFace`: pain.001 projected onto Berlin Group, UK Open Banking or ISO 2018 JSON, with a loss report | Supported |
 | Escape hatch | `Request`: any method and path, status and decoded JSON | Supported |
-| Errors | `*APIError` with status and server detail, for `errors.As` | Supported |
+| Errors | `*APIError` with status and server detail, and `*RefusalError` with a refused `Generate`'s findings, for `errors.As` | Supported |
 | Async jobs | `/api/v1/generate/async`, `/status`, `/download`, `/jobs` | Not wrapped; reachable through `Request` |
 | Retries | Automatic retry on failure | Not provided, by design |
 
@@ -195,8 +214,11 @@ benchmarks live in [`pain001`][core].
   cancel or bound calls the usual way.
 - **Typed errors.** A non-2xx response returns `*APIError{Status,
   Detail}`. `DetailText()` gives a string detail (a 400 for a bad IBAN);
-  `Issues()` gives the 422 validation array. The error message never
-  includes the rejected input.
+  `Issues()` gives the 422 validation array. When `Generate` is refused
+  (`422` with `success: false`) the error is a `*RefusalError`: it wraps
+  the `*APIError` (so `Status` stays 422) and its `Response` carries the
+  decoded `ValidationErrors` and `SchemeViolations`. The error message
+  never includes the rejected input.
 - **Message types as constants, not a closed set.** `Pain00100103` to
   `Pain00100113`, `Pain00800102` and `Pain00800108` match the server's
   enum; any other string converts to `MessageType`, so a newer server's
@@ -225,7 +247,8 @@ URL and these options:
 ## Examples
 
 - [`examples/basic`](examples/basic/main.go): generate a pain.001.001.09
-  file from the kit's credit-transfer fixture and write it to disk.
+  file from the kit's credit-transfer fixture and write it to disk, or
+  print each finding when the server refuses the file.
   Run it from the repository root with a server up:
   `PAIN001_BASE_URL=http://127.0.0.1:8000 go run ./examples/basic -out payments.xml`.
 - [`example_test.go`](example_test.go): validating a file and telling

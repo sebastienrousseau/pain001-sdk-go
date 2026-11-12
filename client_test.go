@@ -261,3 +261,80 @@ func TestMessageTypesAreDistinct(t *testing.T) {
 		seen[mt] = true
 	}
 }
+
+// refusedRows is core 0.0.87's 422 body for rows that fail validation.
+const refusedRows = `{"success":false,"message":"Validation failed: 4/5 rows valid","filename":null,"xml":null,` +
+	`"validation_errors":[{"field":"$.currency","message":"'EURO' does not match '^[A-Z]{3}$'","value":"EURO"}],"scheme_violations":[]}`
+
+func TestGenerateRefusalIsATypedError(t *testing.T) {
+	c, _ := stub(t, 422, refusedRows)
+	res, err := c.Generate(context.Background(), "a,b", "p.csv", Pain00100109, "")
+	var refusal *RefusalError
+	if res != nil || !errors.As(err, &refusal) {
+		t.Fatalf("res %+v, err %T %v, want a *RefusalError", res, err, err)
+	}
+	checkRowsRefusal(t, refusal)
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) || apiErr.Status != 422 {
+		t.Errorf("a refusal must still be an *APIError: %v", err)
+	}
+	want := "pain001: HTTP 422: Validation failed: 4/5 rows valid (1 validation error, 0 scheme violations)"
+	if err.Error() != want {
+		t.Errorf("message %q\nwant    %q", err.Error(), want)
+	}
+	if strings.Contains(err.Error(), "EURO") {
+		t.Error("the error message must not echo the rejected value")
+	}
+}
+
+// checkRowsRefusal checks the findings decoded from refusedRows.
+func checkRowsRefusal(t *testing.T, refusal *RefusalError) {
+	t.Helper()
+	if refusal.Status != 422 || refusal.Response.Success || refusal.Response.Message != "Validation failed: 4/5 rows valid" {
+		t.Errorf("refusal %+v", refusal.Response)
+	}
+	rows := refusal.Response.ValidationErrors
+	if len(rows) != 1 || rows[0].Field != "$.currency" || string(rows[0].Value) != `"EURO"` {
+		t.Errorf("validation errors %+v", rows)
+	}
+	if refusal.Response.SchemeViolations == nil || len(refusal.Response.SchemeViolations) != 0 {
+		t.Errorf("scheme violations %+v", refusal.Response.SchemeViolations)
+	}
+}
+
+func TestGenerateSchemeRefusalCarriesTheViolations(t *testing.T) {
+	c, _ := stub(t, 422, `{"success":false,"message":"Scheme 'uk-chaps' validation failed","xml":null,"validation_errors":[],`+
+		`"scheme_violations":[{"rule":"UK-CHAPS-PURP","field":"purpose_code","severity":"error"},{"rule":"R2"}]}`)
+	_, err := c.Generate(context.Background(), "a,b", "p.csv", "", "uk-chaps")
+	var refusal *RefusalError
+	if !errors.As(err, &refusal) || len(refusal.Response.SchemeViolations) != 2 ||
+		refusal.Response.SchemeViolations[0]["rule"] != "UK-CHAPS-PURP" {
+		t.Fatalf("err %v", err)
+	}
+	if want := "pain001: HTTP 422: Scheme 'uk-chaps' validation failed (0 validation errors, 2 scheme violations)"; err.Error() != want {
+		t.Errorf("message %q", err.Error())
+	}
+}
+
+func TestGenerateOtherErrorsAreNotRefusals(t *testing.T) {
+	for _, reply := range []struct {
+		status int
+		body   string
+	}{
+		{422, `{"detail":[{"loc":["body","message_type"],"msg":"m","type":"enum"}]}`},
+		{422, `{"success":true,"message":"odd"}`},
+		{422, `{"message":"no success member"}`},
+		{422, `not json`},
+		{422, `{"success":false,"message":"m","validation_errors":"not a list"}`},
+		{400, `{"success":false,"message":"refused upload"}`},
+		{500, `{"detail":"boom"}`},
+	} {
+		c, _ := stub(t, reply.status, reply.body)
+		_, err := c.Generate(context.Background(), "a,b", "p.csv", "", "")
+		var refusal *RefusalError
+		var apiErr *APIError
+		if errors.As(err, &refusal) || !errors.As(err, &apiErr) || apiErr.Status != reply.status {
+			t.Errorf("%d %s: err %T %v", reply.status, reply.body, err, err)
+		}
+	}
+}

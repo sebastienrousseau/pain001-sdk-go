@@ -17,6 +17,8 @@ const (
 	creditXML = "credit-transfer.pain.001.001.09.xml"
 	badIBAN   = "bad-iban.pain.001.001.09.csv"
 	debitCSV  = "direct-debit.pain.008.001.08.csv"
+	badCcy    = "bad-currency.pain.001.001.09.csv"
+	chapsCSV  = "chaps-no-purpose.pain.001.001.09.csv"
 )
 
 func TestLiveHealth(t *testing.T) {
@@ -68,6 +70,36 @@ func TestLiveGenerate(t *testing.T) {
 	dd, err := c.Generate(ctx, fixture(t, debitCSV), "collections.csv", pain001.Pain00800108, "")
 	if err != nil || !strings.Contains(dd.XML, "urn:iso:std:iso:20022:tech:xsd:pain.008.001.08") {
 		t.Fatalf("direct debit generate failed: %v", err)
+	}
+}
+
+func TestLiveGenerateRefusedRowsIsATypedRefusal(t *testing.T) {
+	_, err := liveClient(t).Generate(context.Background(), fixture(t, badCcy), "payments.csv", pain001.Pain00100109, "")
+	var refusal *pain001.RefusalError
+	if !errors.As(err, &refusal) || refusal.Status != 422 || refusal.Response.Success {
+		t.Fatalf("err %v, want a 422 *RefusalError", err)
+	}
+	rows := refusal.Response.ValidationErrors
+	if len(rows) == 0 || rows[0].Field != "$.currency" || string(rows[0].Value) != `"EURO"` {
+		t.Errorf("validation errors %+v", rows)
+	}
+	if len(refusal.Response.SchemeViolations) != 0 || refusal.Response.XML != "" {
+		t.Errorf("refusal %+v", refusal.Response)
+	}
+	if strings.Contains(err.Error(), "EURO") {
+		t.Error("the error message must not echo the rejected value")
+	}
+}
+
+func TestLiveGenerateRefusedSchemeIsATypedRefusal(t *testing.T) {
+	_, err := liveClient(t).Generate(context.Background(), fixture(t, chapsCSV), "payments.csv", pain001.Pain00100109, "uk-chaps")
+	var refusal *pain001.RefusalError
+	if !errors.As(err, &refusal) || refusal.Status != 422 {
+		t.Fatalf("err %v, want a 422 *RefusalError", err)
+	}
+	sv := refusal.Response.SchemeViolations
+	if len(refusal.Response.ValidationErrors) != 0 || len(sv) == 0 || sv[0]["rule"] != "UK-CHAPS-PURP" || sv[0]["field"] != "purpose_code" {
+		t.Errorf("refusal %+v", refusal.Response)
 	}
 }
 

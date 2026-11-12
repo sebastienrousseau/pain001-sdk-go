@@ -53,12 +53,15 @@ func (c *Client) Validate(ctx context.Context, content, filename string, message
 }
 
 // Generate turns a payment file into ISO 20022 XML, returned inline in
-// the response. The arguments are those of Validate.
+// the response. The arguments are those of Validate. When the server
+// refuses the data (rows that fail validation or a scheme rule) the
+// error is a *RefusalError carrying the findings; a nil error always
+// comes with the XML.
 func (c *Client) Generate(ctx context.Context, content, filename string, messageType MessageType, scheme string) (*GenerateResponse, error) {
 	body := filePayload{Filename: filename, Content: content, MessageType: messageType, Scheme: scheme}
 	out := new(GenerateResponse)
 	if err := c.call(ctx, http.MethodPost, "/api/v1/ui/generate", body, out); err != nil {
-		return nil, err
+		return nil, asRefusal(err)
 	}
 	return out, nil
 }

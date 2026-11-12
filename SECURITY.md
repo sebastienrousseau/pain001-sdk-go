@@ -50,7 +50,7 @@ no XML and runs no code from the server.
 
 | Surface | How it's handled |
 | :--- | :--- |
-| **Payment data in logs** | The client logs nothing. `APIError.Error()` lists a 422's locations and messages and leaves out the rejected input. |
+| **Payment data in logs** | The client logs nothing. `APIError.Error()` lists a 422's locations and messages and leaves out the rejected input; `RefusalError.Error()` gives the server's summary and the number of findings, not the findings, whose messages can quote the input. |
 | **Credential leakage** | The API key goes only in the `Authorization` header, never in the URL or error text. Go's `http.Client` drops it on a redirect to another host. |
 | **Resource exhaustion** | Response bodies are capped at 64 MiB; every call carries a timeout (30 seconds by default). |
 | **Path injection** | The face name is path-escaped before it joins the URL. |

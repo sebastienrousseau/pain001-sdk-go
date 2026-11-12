@@ -5,12 +5,12 @@ package pain001
 import "encoding/json"
 
 // MessageType names an ISO 20022 message the server generates. The
-// constants are the server's MessageType enum at kit version 1; any other
+// constants are the server's MessageType enum at kit version 2; any other
 // string converts too, so a newer server's types work without a new
 // release of this package.
 type MessageType string
 
-// The message types pain001 0.0.85 supports.
+// The message types pain001 0.0.87 supports.
 const (
 	Pain00100103 MessageType = "pain.001.001.03"
 	Pain00100104 MessageType = "pain.001.001.04"
@@ -62,8 +62,10 @@ type ValidationResponse struct {
 	SchemeViolations []map[string]any `json:"scheme_violations"`
 }
 
-// GenerateResponse is the body of POST /api/v1/ui/generate. XML holds
-// the document when Success is true.
+// GenerateResponse is the body of POST /api/v1/ui/generate. Generate
+// returns it with Success true and the document in XML; a refusal's body
+// (Success false, XML empty, the findings in ValidationErrors or
+// SchemeViolations) comes as RefusalError.Response.
 type GenerateResponse struct {
 	Success          bool             `json:"success"`
 	Message          string           `json:"message"`
