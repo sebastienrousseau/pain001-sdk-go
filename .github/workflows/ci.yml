@@ -1,0 +1,109 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Lint, build and unit-test the client on the two Go releases the Go
+# team supports, then run the conformance kit and the typed tests
+# against a real `pain001 serve` installed from hash-pinned
+# requirements.
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: gofmt, vet, staticcheck, complexity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+          cache: false
+      - run: make fmt-check vet staticcheck complexity
+
+  vulncheck:
+    name: govulncheck (dependency advisories)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The module is stdlib-only, so govulncheck checks the standard
+    # library of the newest supported Go against the Go vulnerability
+    # database. It needs no secret and fails on any reachable advisory.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+          cache: false
+      - run: make vulncheck
+
+  test:
+    name: build and unit tests (Go ${{ matrix.go }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # The two releases the Go team supports; 1.26 is the go.mod floor.
+        go: ["1.26", "1.27"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ matrix.go }}
+          cache: false
+      - run: make build test
+
+  conformance:
+    name: conformance kit against pain001 serve
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install the server from hash-pinned requirements
+        run: |
+          python -m venv "$RUNNER_TEMP/srv"
+          "$RUNNER_TEMP/srv/bin/python" -m pip install --quiet --require-hashes -r ci/server-requirements.txt
+      - name: Start pain001 serve and wait for /api/v1/health
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          nohup "$RUNNER_TEMP/srv/bin/pain001" serve --host 127.0.0.1 --port 8000 > server.log 2>&1 &
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8000/api/v1/health; then exit 0; fi
+            sleep 1
+          done
+          cat server.log
+          exit 1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+          cache: false
+      - name: Conformance, typed tests and the example
+        env:
+          PAIN001_BASE_URL: http://127.0.0.1:8000
+        run: make conformance
+      - name: Server log
+        if: failure()
+        run: cat "$RUNNER_TEMP/server.log"
