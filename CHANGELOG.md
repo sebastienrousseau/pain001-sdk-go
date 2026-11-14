@@ -106,6 +106,10 @@ CI tests against pain001 0.0.87, the latest released server.
   `DEVELOPMENT.md` (every CI gate reproduced locally, test layout,
   release model, settings the maintainer creates) and `GOVERNANCE.md`
   (roles, decisions, continuity plan).
+- The README follows the workspace template in full: the suite's
+  ecosystem comparison table, measured benchmark numbers, an example
+  table covering every method, the five SDKs in the family map, and a
+  registry badge that tracks the latest tag.
 - `scripts/verify-release-versions`, run by `make check` and CI: fails
   when `version.go`, `CITATION.cff`, the `SECURITY.md` and `SUPPORT.md`
   support tables, a Markdown install snippet or the `CHANGELOG.md`
