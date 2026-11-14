@@ -38,7 +38,8 @@ vulncheck:
 	go run $(GOVULNCHECK) ./...
 
 # Cyclomatic <= 10 and cognitive <= 15 per function; size_test.go holds
-# 60 lines per function and 500 per file.
+# 60 lines per function and 500 per file, halstead_test.go a Halstead
+# difficulty of 30.
 complexity:
 	go run $(GOCYCLO) -over 10 .
 	go run $(GOCOGNIT) -over 15 .
@@ -46,8 +47,11 @@ complexity:
 build:
 	go build ./...
 
+# Race-enabled tests of the library; fails below 100.0% of statements
+# (scripts/coverage.sh). size_test.go and halstead_test.go hold the size
+# and Halstead ceilings.
 test:
-	go test -race -count=1 -cover ./...
+	scripts/coverage.sh
 
 conformance:
 	@if [ -z "$$PAIN001_BASE_URL" ]; then \

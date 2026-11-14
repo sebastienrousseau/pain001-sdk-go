@@ -61,6 +61,10 @@ CI tests against pain001 0.0.87, the latest released server.
   support tables, a Markdown install snippet or the `CHANGELOG.md`
   heading disagree, or when the server pin and its lock name different
   pain001 releases. `--release` also requires the dated release heading.
+- A 100.0% statement-coverage floor: `make test` runs
+  `scripts/coverage.sh`, which fails below it, on both Go versions in
+  CI. `halstead_test.go` holds every function to a Halstead difficulty
+  of 30, the last of the workspace's complexity ceilings without a gate.
 - `SUPPORT.md`: where to ask, what to include, and which versions get
   fixes.
 - The README demo, `.github/demo.gif`, rendered by `make demo` from
