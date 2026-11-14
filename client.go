@@ -186,6 +186,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any) 
 		return nil, fmt.Errorf("pain001: %s %s: %w", method, path, err)
 	}
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

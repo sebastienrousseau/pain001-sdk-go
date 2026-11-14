@@ -12,6 +12,9 @@ The first release will be 0.0.86, with pain001 0.0.86.
 
 ### Added
 
+- `Version`, the module's release, and a `User-Agent:
+  pain001-sdk-go/<Version>` header on every request, so a server's
+  access log shows which SDK and release sent a call.
 - `pain001.NewClient` with `WithAPIKey`, `WithHTTPClient` and
   `WithTimeout`; typed `Health`, `Validate`, `Generate`, `Check`,
   `Faces` and `ProjectFace` methods, each taking a `context.Context`;
