@@ -20,11 +20,11 @@ The client is tested against the pain001 server pinned in
 
 ## Read first
 
-- [README.md](README.md): install, quick start, every option and the
+- [README.md](https://github.com/sebastienrousseau/pain001-sdk-go/blob/main/README.md): install, quick start, every option and the
   example index.
 - The [user manual](https://sebastienrousseau.github.io/pain001-sdk-go/)
   and the [API reference](https://pkg.go.dev/github.com/sebastienrousseau/pain001-sdk-go).
-- [`examples/`](examples/): one runnable program per method, each run
+- [`examples/`](https://github.com/sebastienrousseau/pain001-sdk-go/tree/main/examples): one runnable program per method, each run
   against a live server in CI.
 
 ## Questions and bugs
@@ -45,4 +45,4 @@ client only carries requests and responses.
 
 ## Security reports
 
-Never in a public issue. Follow [SECURITY.md](SECURITY.md).
+Never in a public issue. Follow [SECURITY.md](https://github.com/sebastienrousseau/pain001-sdk-go/blob/main/SECURITY.md).

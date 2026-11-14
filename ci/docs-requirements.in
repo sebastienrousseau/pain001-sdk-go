@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# The user manual's build (mkdocs.yml). Regenerate the .txt with:
+#   uv pip compile --generate-hashes --python-version 3.12 ci/docs-requirements.in -o ci/docs-requirements.txt
+mkdocs-material

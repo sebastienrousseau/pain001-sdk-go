@@ -94,6 +94,18 @@ CI tests against pain001 0.0.87, the latest released server.
   a `.devcontainer/` that boots to a working `make check`. Dependabot
   now watches the Python tool locks in `ci/` (not the server pin) and
   the devcontainer features.
+- The user manual: MkDocs Material from `docs/` (`mkdocs.yml`), built
+  with `--strict` in CI and deployed to GitHub Pages by
+  `.github/workflows/docs.yml` once Pages is switched on, with the
+  author link on every page (`scripts/check-site-footer.sh`). New pages:
+  a usage guide, the example index, `ARCHITECTURE.md`, `COMPARISON.md`
+  (the suite's shared table with evidence links), `BENCHMARKS.md`
+  (method, environment and measured numbers), `POLICIES.md`,
+  `ROADMAP.md`, `packaging.md`, and ADRs 0001 to 0004 (thin client,
+  standard library only, error model, opt-in retries). Root
+  `DEVELOPMENT.md` (every CI gate reproduced locally, test layout,
+  release model, settings the maintainer creates) and `GOVERNANCE.md`
+  (roles, decisions, continuity plan).
 - `scripts/verify-release-versions`, run by `make check` and CI: fails
   when `version.go`, `CITATION.cff`, the `SECURITY.md` and `SUPPORT.md`
   support tables, a Markdown install snippet or the `CHANGELOG.md`
