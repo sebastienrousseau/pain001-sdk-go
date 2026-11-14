@@ -37,6 +37,12 @@ The first release will be 0.0.86, with pain001 0.0.86.
   `FuzzErrorOmitsRejectedInput` and `FuzzRefusalOmitsFindings`, seeded
   from the conformance kit's responses. `go test` runs their seeds, and
   `make fuzz` fuzzes each for a minute.
+- `ErrNoDocument`: `Generate` now returns an error wrapping it when a
+  `2xx` response carries no XML (`success: false` or an empty `xml`),
+  as a server older than pain001 0.0.87 sends for a refusal. It used to
+  return that body with a nil error, against its documented promise
+  that a nil error always comes with the XML. Found by
+  `FuzzTypedMethods`.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
   0.0.86 installed from hash-pinned requirements.

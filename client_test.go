@@ -73,6 +73,9 @@ func TestTypedMethodsSendTheDocumentedRequests(t *testing.T) {
 		}, map[string]any{"content": "a,b", "filename": "p.csv", "message_type": "pain.001.001.09", "scheme": "sepa-sct"}},
 		{"generate", "POST", "/api/v1/ui/generate", func() error {
 			_, err := c.Generate(ctx, "a,b", "p.csv", "", "")
+			if errors.Is(err, ErrNoDocument) {
+				return nil // the stub's {} carries no XML; the request is what is checked
+			}
 			return err
 		}, map[string]any{"content": "a,b", "filename": "p.csv"}},
 		{"check", "POST", "/api/v1/check", func() error {
@@ -335,6 +338,24 @@ func TestGenerateOtherErrorsAreNotRefusals(t *testing.T) {
 		var apiErr *APIError
 		if errors.As(err, &refusal) || !errors.As(err, &apiErr) || apiErr.Status != reply.status {
 			t.Errorf("%d %s: err %T %v", reply.status, reply.body, err, err)
+		}
+	}
+}
+
+func TestGenerateWithoutTheXMLIsAnError(t *testing.T) {
+	for _, body := range []string{
+		`{"success":false,"message":"Validation failed: 4/5 rows valid","xml":null,"validation_errors":[{"field":"$.currency","value":"EURO"}]}`,
+		`{"success":true,"message":"Generated","xml":""}`,
+		`{}`,
+	} {
+		c, _ := stub(t, 200, body)
+		res, err := c.Generate(context.Background(), "a,b", "p.csv", "", "")
+		var apiErr *APIError
+		if res != nil || !errors.Is(err, ErrNoDocument) || errors.As(err, &apiErr) {
+			t.Errorf("%s: res %+v, err %T %v", body, res, err, err)
+		}
+		if err != nil && strings.Contains(err.Error(), "EURO") {
+			t.Errorf("the error message must not echo the rejected value: %v", err)
 		}
 	}
 }

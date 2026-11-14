@@ -125,7 +125,7 @@ func FuzzTypedMethods(f *testing.F) {
 		checkOutcome(t, status, "Validate", v != nil, err)
 		g, err := c.Generate(ctx, "a,b", "p.csv", Pain00100109, "")
 		checkOutcome(t, status, "Generate", g != nil, err)
-		checkGenerate(t, status, err)
+		checkGenerate(t, status, g, err)
 		ch, err := c.Check(ctx, "<x/>", "", "")
 		checkOutcome(t, status, "Check", ch != nil, err)
 		_, err = c.Faces(ctx)
@@ -152,13 +152,16 @@ func checkOutcome(t *testing.T, status int, name string, gotValue bool, err erro
 	}
 }
 
-// checkGenerate holds Generate's own promise: a refusal is a 422 with
-// success false.
-func checkGenerate(t *testing.T, status int, err error) {
+// checkGenerate holds Generate's own promises: a refusal is a 422 with
+// success false, and a nil error always comes with the XML.
+func checkGenerate(t *testing.T, status int, res *GenerateResponse, err error) {
 	t.Helper()
 	var refusal *RefusalError
 	if errors.As(err, &refusal) && (refusal.Status != 422 || status != 422 || refusal.Response.Success) {
 		t.Fatalf("refusal from HTTP %d: %+v", status, refusal.Response)
+	}
+	if err == nil && (!res.Success || res.XML == "") {
+		t.Fatalf("HTTP %d: nil error without the document: %+v", status, res)
 	}
 }
 

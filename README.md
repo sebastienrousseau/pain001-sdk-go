@@ -85,7 +85,8 @@ talk to.
   HTTPS. The vendored conformance kit (kit 2) is core 0.0.87's, and its
   refusal cases need a 0.0.87 server. Before 0.0.87 the server answers
   a refused `Generate` with `200` and `success: false`, which comes back
-  as a `GenerateResponse` rather than a `*RefusalError`.
+  as an error wrapping `ErrNoDocument` rather than a `*RefusalError`,
+  so a nil error from `Generate` always comes with the XML.
 - Pure Go with no cgo, so any platform Go builds for; CI exercises
   Linux, and the tests have also run on macOS (arm64).
 

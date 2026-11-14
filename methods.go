@@ -4,6 +4,8 @@ package pain001
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -56,15 +58,25 @@ func (c *Client) Validate(ctx context.Context, content, filename string, message
 // the response. The arguments are those of Validate. When the server
 // refuses the data (rows that fail validation or a scheme rule) the
 // error is a *RefusalError carrying the findings; a nil error always
-// comes with the XML.
+// comes with the XML. A 2xx response without the XML, which a server
+// older than pain001 0.0.87 sends for a refusal, is ErrNoDocument.
 func (c *Client) Generate(ctx context.Context, content, filename string, messageType MessageType, scheme string) (*GenerateResponse, error) {
 	body := filePayload{Filename: filename, Content: content, MessageType: messageType, Scheme: scheme}
 	out := new(GenerateResponse)
-	if err := c.call(ctx, http.MethodPost, "/api/v1/ui/generate", body, out); err != nil {
+	const path = "/api/v1/ui/generate"
+	if err := c.call(ctx, http.MethodPost, path, body, out); err != nil {
 		return nil, asRefusal(err)
+	}
+	if !out.Success || out.XML == "" {
+		return nil, fmt.Errorf("pain001: %s %s: %w", http.MethodPost, path, ErrNoDocument)
 	}
 	return out, nil
 }
+
+// ErrNoDocument reports a successful generate response that carries no
+// XML: "success" false or "xml" empty. pain001 0.0.87 and later answer a
+// refusal with 422 instead, which Generate returns as a *RefusalError.
+var ErrNoDocument = errors.New("success response carries no XML")
 
 // Check runs the server's checks on a pain.001 or pain.008 document.
 // scheme adds scheme profiles (comma-separated, for example "sepa-sct")
