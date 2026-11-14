@@ -47,6 +47,11 @@ The first release will be 0.0.86, with pain001 0.0.86.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
   0.0.86 installed from hash-pinned requirements.
+- The README demo, `.github/demo.gif`, rendered by `make demo` from
+  `.github/demo.tape` with vhs: the typed live tests and
+  `examples/basic` against a `pain001 serve` the tape starts on
+  loopback. CONTRIBUTING.md shows how to install the pinned server for
+  it.
 
 ### Fixed
 

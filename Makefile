@@ -10,7 +10,7 @@ GOCYCLO     := github.com/fzipp/gocyclo/cmd/gocyclo@v0.6.0
 GOCOGNIT    := github.com/uudashr/gocognit/cmd/gocognit@v1.3.0
 GOVULNCHECK := golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
-.PHONY: check fmt-check fmt vet staticcheck complexity vulncheck build test conformance example fuzz
+.PHONY: check fmt-check fmt vet staticcheck complexity vulncheck build test conformance example fuzz demo
 
 check: fmt-check vet staticcheck complexity vulncheck build test conformance
 
@@ -68,3 +68,23 @@ fuzz:
 example:
 	mkdir -p bin
 	go run ./examples/basic -out bin/payments.xml
+
+# The README demo, .github/demo.gif, rendered by vhs from .github/demo.tape.
+# The tape starts `pain001 serve` on 127.0.0.1:$(DEMO_PORT) and stops it at
+# the end; make stops it too if vhs fails. Set PAIN001_SERVER to the
+# server's `pain001` binary, or put it on PATH; CONTRIBUTING.md shows how
+# to install the pinned one.
+PAIN001_SERVER ?= $(shell command -v pain001 2>/dev/null)
+DEMO_PORT ?= 18765
+
+demo:
+	@if [ -z "$(PAIN001_SERVER)" ] || [ ! -x "$(abspath $(PAIN001_SERVER))" ]; then \
+		echo "demo: no pain001 server; set PAIN001_SERVER=/path/to/bin/pain001 (see CONTRIBUTING.md)" >&2; exit 1; \
+	fi
+	@if curl -s -o /dev/null "http://127.0.0.1:$(DEMO_PORT)/"; then \
+		echo "demo: 127.0.0.1:$(DEMO_PORT) is already in use; set DEMO_PORT to a free port" >&2; exit 1; \
+	fi
+	@server="$(abspath $(PAIN001_SERVER))"; \
+	PAIN001_SERVER="$$server" DEMO_PORT="$(DEMO_PORT)" vhs .github/demo.tape; status=$$?; \
+	pkill -f "$$server serve --host 127.0.0.1 --port $(DEMO_PORT)" || true; \
+	exit $$status

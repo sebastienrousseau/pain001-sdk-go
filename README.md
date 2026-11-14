@@ -20,9 +20,7 @@
 </p>
 
 <p align="center">
-  No demo GIF: this is a library with no terminal interface of its own,
-  and its one example needs a running server. The
-  <a href="#quick-start">Quick Start</a> shows the call and its output.
+  <img src="https://raw.githubusercontent.com/sebastienrousseau/pain001-sdk-go/main/.github/demo.gif" alt="A terminal running the client's live tests for Health, Validate, Generate and Check against a local pain001 server, then examples/basic writing a five-transaction pain.001.001.09 file from the conformance fixture and printing its group header" width="100%" />
 </p>
 
 ---
@@ -292,7 +290,9 @@ nothing is installed globally. `go test` also runs the fuzz targets'
 seeds; `make fuzz` fuzzes each target for a minute (`FUZZTIME=30s` to
 change it). CI adds a Go 1.26 and 1.27 matrix, 30 seconds of fuzzing
 per target, a conformance job against `pain001 serve` installed from
-hash-pinned requirements, markdownlint and the DCO check. See
+hash-pinned requirements, markdownlint and the DCO check. `make demo`
+re-renders the GIF above with [vhs](https://github.com/charmbracelet/vhs)
+against a `pain001 serve` it starts on loopback. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
