@@ -87,6 +87,13 @@ CI tests against pain001 0.0.87, the latest released server.
   the GitHub release in the suite's format (`scripts/release-notes.sh`,
   Highlights from `.github/release-highlights.md`), audits it, and
   publishes the module by warming proxy.golang.org. Safe to re-run.
+- REUSE compliance (`REUSE.toml`, `LICENSES/`) and codespell
+  (`.codespellrc`) in the Docs lint workflow, next to markdownlint;
+  `make docs-lint` runs all three. `.editorconfig`,
+  `.pre-commit-config.yaml` (hooks that call the same make targets) and
+  a `.devcontainer/` that boots to a working `make check`. Dependabot
+  now watches the Python tool locks in `ci/` (not the server pin) and
+  the devcontainer features.
 - `scripts/verify-release-versions`, run by `make check` and CI: fails
   when `version.go`, `CITATION.cff`, the `SECURITY.md` and `SUPPORT.md`
   support tables, a Markdown install snippet or the `CHANGELOG.md`

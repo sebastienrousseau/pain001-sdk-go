@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+//
+// A container that boots to a working `make check`: Go 1.27 (the image,
+// pinned by digest), Python 3.12 for the pinned `pain001 serve` that
+// `make regression` installs, and Node.js 22 for markdownlint.
+{
+  "name": "pain001-sdk-go",
+  "image": "mcr.microsoft.com/devcontainers/go:2-1.27-trixie@sha256:c83c320b68e27dc36903cd5ee07394870c5330dfd77b0897e78c7e1aa00ddfd0",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+  },
+  "postCreateCommand": "make check",
+  "customizations": {
+    "vscode": {
+      "extensions": ["golang.go"]
+    }
+  }
+}

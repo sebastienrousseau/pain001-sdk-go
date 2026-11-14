@@ -1,8 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 #
-# Markdown style on every push and pull request (markdownlint-cli2,
-# configured in .markdownlint-cli2.jsonc). Run it locally with
-# `npx markdownlint-cli2@0.23.3 "**/*.md"`.
+# Docs and licensing hygiene on every push and pull request:
+#   - markdownlint-cli2 (configured in .markdownlint-cli2.jsonc) and
+#     codespell (.codespellrc), in the `markdownlint` job, whose name is
+#     a required status check on main;
+#   - REUSE lint: every file carries licensing and copyright
+#     information (headers, or REUSE.toml for files that cannot).
+# Run them locally with `make docs-lint` (see DEVELOPMENT.md).
 name: Docs lint
 
 on:
@@ -13,6 +17,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: docs-lint-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   docs-lint:
@@ -30,3 +38,36 @@ jobs:
 
       - name: Markdown style (markdownlint-cli2)
         run: npx --yes markdownlint-cli2@0.23.3 "**/*.md"
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install codespell and reuse from hash-pinned requirements
+        run: |
+          python -m venv "$RUNNER_TEMP/lint"
+          "$RUNNER_TEMP/lint/bin/python" -m pip install --quiet --require-hashes -r ci/lint-requirements.txt
+
+      - name: Spelling (codespell)
+        run: '"$RUNNER_TEMP/lint/bin/codespell"'
+
+  reuse:
+    name: REUSE lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install reuse from hash-pinned requirements
+        run: |
+          python -m venv "$RUNNER_TEMP/lint"
+          "$RUNNER_TEMP/lint/bin/python" -m pip install --quiet --require-hashes -r ci/lint-requirements.txt
+
+      - name: REUSE compliance
+        run: '"$RUNNER_TEMP/lint/bin/reuse" lint'

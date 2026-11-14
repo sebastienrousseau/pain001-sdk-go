@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# codespell, run by the docs-lint workflow and pre-commit. Skipped: the
+# vendored kit (linted in core), licence texts, binary and recorded data,
+# lockfiles, and build output.
+[codespell]
+skip = ./.git,./conformance,./LICENSES,./testdata,./bin,./dist,./site,*.gif,./ci/*.txt,./KEYS.asc
+check-hidden = true

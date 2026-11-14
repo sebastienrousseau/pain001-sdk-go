@@ -10,7 +10,7 @@ GOCYCLO     := github.com/fzipp/gocyclo/cmd/gocyclo@v0.6.0
 GOCOGNIT    := github.com/uudashr/gocognit/cmd/gocognit@v1.3.0
 GOVULNCHECK := golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
-.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance examples bench regression fuzz demo
+.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance examples bench regression docs-lint fuzz demo
 
 check: versions fmt-check vet staticcheck complexity vulncheck build test conformance
 
@@ -82,6 +82,13 @@ bench:
 # and the benchmark smoke against it, and stops it even on failure.
 regression:
 	scripts/regression.sh
+
+# The Docs lint workflow: markdownlint, codespell and REUSE. Needs npx,
+# and codespell and reuse from ci/lint-requirements.txt on PATH.
+docs-lint:
+	npx --yes markdownlint-cli2@0.23.3 "**/*.md"
+	codespell
+	reuse lint
 
 # Fuzzes each Fuzz target the package lists for FUZZTIME (go test runs
 # only the seeds and testdata/fuzz). A crash leaves its input in
