@@ -61,33 +61,41 @@ func measure(src []byte) halstead {
 // TestHalsteadDifficulty keeps every Go function, tests included, at a
 // Halstead difficulty of 30 or less.
 func TestHalsteadDifficulty(t *testing.T) {
-	fset := token.NewFileSet()
 	err := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".go") {
 			return err
 		}
-		src, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		file, err := parser.ParseFile(fset, path, src, 0)
-		if err != nil {
-			return err
-		}
-		base := fset.File(file.Pos()).Base()
-		for _, decl := range file.Decls {
-			if fn, ok := decl.(*ast.FuncDecl); ok {
-				body := src[int(fn.Pos())-base : int(fn.End())-base]
-				if d := measure(body).difficulty(); d > maxHalsteadDifficulty {
-					t.Errorf("%s: %s has Halstead difficulty %.1f, ceiling %d", path, fn.Name.Name, d, maxHalsteadDifficulty)
-				}
-			}
-		}
-		return nil
+		return checkHalstead(t, path)
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+// checkHalstead measures every function declared in one Go file.
+func checkHalstead(t *testing.T, path string) error {
+	t.Helper()
+	src, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	fset := token.NewFileSet()
+	file, err := parser.ParseFile(fset, path, src, 0)
+	if err != nil {
+		return err
+	}
+	base := fset.File(file.Pos()).Base()
+	for _, decl := range file.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok {
+			continue
+		}
+		body := src[int(fn.Pos())-base : int(fn.End())-base]
+		if d := measure(body).difficulty(); d > maxHalsteadDifficulty {
+			t.Errorf("%s: %s has Halstead difficulty %.1f, ceiling %d", path, fn.Name.Name, d, maxHalsteadDifficulty)
+		}
+	}
+	return nil
 }
 
 func TestHalsteadCountsOperatorsAndOperands(t *testing.T) {
