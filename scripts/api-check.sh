@@ -31,6 +31,10 @@ if report="$(go run "$GORELEASE" -base="$base" 2>&1)"; then
   exit 0
 fi
 echo "$report"
+if ! printf '%s\n' "$report" | grep -q '^## incompatible changes'; then
+  echo "api-check: gorelease failed (see above)" >&2
+  exit 1
+fi
 # The CHANGELOG's top section: from its first "## [" heading to the next.
 if awk '/^## \[/ { n++ } n == 1' CHANGELOG.md | grep -q 'Breaking:'; then
   echo "api-check: incompatible change acknowledged by a 'Breaking:' line in CHANGELOG.md"
