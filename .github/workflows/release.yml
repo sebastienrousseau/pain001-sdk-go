@@ -1,0 +1,209 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Release pipeline, triggered by pushing a signed annotated tag v<version>.
+#
+#   build    checks the tag (annotated, signed by a key in KEYS.asc,
+#            message "pain001-sdk-go v<version>"), that every version
+#            restatement matches it, runs the tests and the API check,
+#            and builds the source archive, CycloneDX SBOM and SHA256SUMS
+#   notes    composes the release notes (scripts/release-notes.sh)
+#   release  attests build provenance, creates or updates the GitHub
+#            release titled "pain001-sdk-go <version>", then audits it
+#   publish  asks proxy.golang.org for the version, which is how a Go
+#            module is published, and checks sum.golang.org recorded it
+#
+# Dry run: run the workflow by hand (workflow_dispatch) with dry_run
+# left on. build and notes run against HEAD and print what would be
+# released; release and publish are skipped. Every job is safe to re-run
+# on the tag: the release is edited and its assets replaced, and the
+# proxy request is idempotent.
+#
+# release and publish run in the `release` environment, so a required
+# reviewer there gates them. See DEVELOPMENT.md, "Releasing".
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and print the release, publish nothing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MODULE: github.com/sebastienrousseau/pain001-sdk-go
+
+jobs:
+  build:
+    name: verify and build artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+          cache: false
+      - name: Version
+        id: version
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^const Version = "\(.*\)"$/\1/p' version.go)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing pain001-sdk-go $version"
+      - name: Check the tag (annotated, signed, named, matching every file)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          git fetch --force origin "refs/tags/$TAG:refs/tags/$TAG"
+          test "$(git cat-file -t "$TAG")" = tag || { echo "::error::$TAG is not an annotated tag"; exit 1; }
+          subject="$(git for-each-ref --format='%(contents:subject)' "refs/tags/$TAG")"
+          test "$subject" = "pain001-sdk-go v$VERSION" || { echo "::error::tag message is '$subject', want 'pain001-sdk-go v$VERSION'"; exit 1; }
+          git config gpg.ssh.allowedSignersFile KEYS.asc
+          git verify-tag "$TAG"
+          TAG="$TAG" scripts/verify-release-versions --release
+      - name: Check the versions (dry run)
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: scripts/verify-release-versions
+      - name: Tests at 100% coverage
+        run: make build test
+      - name: API-breakage check against the last tag
+        run: scripts/api-check.sh
+      - name: Build the source archive, SBOM and SHA256SUMS
+        run: scripts/release-artifacts.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  notes:
+    name: compose release notes
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+      - name: Compose the notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          scripts/release-notes.sh > notes.md
+          cat notes.md >> "$GITHUB_STEP_SUMMARY"
+          cat notes.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: notes
+          path: notes.md
+          if-no-files-found: error
+
+  release:
+    name: GitHub release with provenance
+    needs: [build, notes]
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'push' || inputs.dry_run == false)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release
+    permissions:
+      contents: write # create the release and upload its assets
+      id-token: write # sign the provenance attestation
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: notes
+          path: .
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/*"
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          TITLE: pain001-sdk-go ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITLE" --notes-file notes.md
+            gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" --verify-tag --title "$TITLE" --notes-file notes.md dist/*
+          fi
+      - name: Audit the published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          TITLE: pain001-sdk-go ${{ needs.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" --json name,body > live.json
+          test "$(jq -r .name live.json)" = "$TITLE" || { echo "::error::release title is not '$TITLE'"; exit 1; }
+          jq -r .body live.json > live.md
+          if grep -q '—' live.md; then echo "::error::the release body has an em dash"; exit 1; fi
+          for heading in "## Highlights ⭐️" "## What's Changed" "## Checksums"; do
+            grep -qxF "$heading" live.md || { echo "::error::missing '$heading'"; exit 1; }
+          done
+          grep -q '^\*\*Full Changelog\*\*: ' live.md || { echo "::error::missing the Full Changelog line"; exit 1; }
+
+  publish:
+    name: publish to proxy.golang.org
+    needs: [build, release]
+    if: startsWith(github.ref, 'refs/tags/v') && (github.event_name == 'push' || inputs.dry_run == false)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release
+    steps:
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+          cache: false
+      - name: Warm the module proxy and check the checksum database
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            if curl -fsS "https://proxy.golang.org/$MODULE/@v/$TAG.info"; then break; fi
+            test "$attempt" -lt 5 || exit 1
+            sleep $((attempt * 15))
+          done
+          echo
+          dir="$(mktemp -d)"
+          cd "$dir"
+          go mod init example.com/warm
+          GOPROXY=https://proxy.golang.org GOFLAGS=-mod=mod go get "$MODULE@$TAG"
+          curl -fsS "https://sum.golang.org/lookup/$MODULE@$TAG"

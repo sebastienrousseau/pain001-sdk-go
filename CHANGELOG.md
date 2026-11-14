@@ -79,6 +79,14 @@ CI tests against pain001 0.0.87, the latest released server.
   the last tag, a no-op until the first tag exists), and the
   conformance job now runs `make regression`, adding every example and
   the benchmark smoke against a server started with an API key.
+- A tag-triggered release workflow (`.github/workflows/release.yml`)
+  with a `workflow_dispatch` dry run: it verifies the signed annotated
+  tag and every version restatement, runs the tests and the API check,
+  builds the source archive, a CycloneDX SBOM and `SHA256SUMS`
+  (`scripts/release-artifacts.sh`), attests their provenance, writes
+  the GitHub release in the suite's format (`scripts/release-notes.sh`,
+  Highlights from `.github/release-highlights.md`), audits it, and
+  publishes the module by warming proxy.golang.org. Safe to re-run.
 - `scripts/verify-release-versions`, run by `make check` and CI: fails
   when `version.go`, `CITATION.cff`, the `SECURITY.md` and `SUPPORT.md`
   support tables, a Markdown install snippet or the `CHANGELOG.md`
