@@ -10,7 +10,7 @@ GOCYCLO     := github.com/fzipp/gocyclo/cmd/gocyclo@v0.6.0
 GOCOGNIT    := github.com/uudashr/gocognit/cmd/gocognit@v1.3.0
 GOVULNCHECK := golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
-.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance example fuzz demo
+.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance examples fuzz demo
 
 check: versions fmt-check vet staticcheck complexity vulncheck build test conformance
 
@@ -57,7 +57,7 @@ conformance:
 	@if [ -z "$$PAIN001_BASE_URL" ]; then \
 		echo "conformance: PAIN001_BASE_URL is unset, skipping the live tests"; \
 	else \
-		go test -race -count=1 -v -run 'TestConformance|TestLive' . && $(MAKE) example; \
+		go test -race -count=1 -v -run 'TestConformance|TestLive' . && $(MAKE) examples; \
 	fi
 
 # Fuzzes each Fuzz target the package lists for FUZZTIME (go test runs
@@ -73,10 +73,19 @@ fuzz:
 		go test -run='^$$' -fuzz="^$$target$$" -fuzztime=$(FUZZTIME) . ; \
 	done
 
-# Writes into bin/, which .gitignore excludes.
-example:
+# Builds every program under examples/ into bin/ (which .gitignore
+# excludes) and runs each against PAIN001_BASE_URL from the repository
+# root, so the kit's fixture paths resolve. Each exits non-zero when the
+# server does not answer as the example expects.
+EXAMPLES := $(notdir $(patsubst %/,%,$(dir $(wildcard examples/*/main.go))))
+
+examples:
 	mkdir -p bin
-	go run ./examples/basic -out bin/payments.xml
+	go build -o bin/ ./examples/...
+	@set -e; for name in $(EXAMPLES); do \
+		echo "example: $$name"; \
+		if [ "$$name" = basic ]; then bin/basic -out bin/payments.xml; else bin/$$name; fi; \
+	done
 
 # The README demo, .github/demo.gif, rendered by vhs from .github/demo.tape.
 # The tape starts `pain001 serve` on 127.0.0.1:$(DEMO_PORT) and stops it at

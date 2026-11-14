@@ -41,6 +41,12 @@ CI tests against pain001 0.0.87, the latest released server.
   `Generate` now always comes with the XML.
 - `examples/basic`, which generates pain.001.001.09 from the kit's
   credit-transfer fixture and prints each finding of a refusal.
+- One runnable program per method under `examples/`: `health`,
+  `validate`, `basic` (generate), `check`, `faces`, `projectface`,
+  `request`, `errors` (`*APIError`, `*RefusalError`, `ErrNoDocument`),
+  `timeout`, `apikey` and `retry`. `make examples` builds them all and
+  runs each against `PAIN001_BASE_URL`; each exits non-zero when the
+  server does not answer as it expects. `make conformance` runs them.
 - Fuzz targets for the client's handling of untrusted responses:
   `FuzzRequest`, `FuzzTypedMethods`, `FuzzAPIError`,
   `FuzzErrorOmitsRejectedInput` and `FuzzRefusalOmitsFindings`, seeded
