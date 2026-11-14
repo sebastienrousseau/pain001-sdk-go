@@ -6,7 +6,7 @@ All notable changes to this project are documented in this file. The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions advance in `0.0.1` steps in lockstep with the pain001 suite.
 
-## [Unreleased]
+## [0.0.88] - 2026-11-14
 
 The first release will be 0.0.88, in lockstep with the pain001 suite.
 CI tests against pain001 0.0.87, the latest released server.
@@ -134,3 +134,8 @@ CI tests against pain001 0.0.87, the latest released server.
   error, so a garbled response passed the conformance runner while the
   typed methods rejected it. It now returns an error for anything but
   JSON whitespace after the value. Found by `FuzzRequest`.
+
+### Changed
+
+- CI tests against pain001 0.0.88, the release this SDK ships with
+  (`ci/server-requirements.in`).

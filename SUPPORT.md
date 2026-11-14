@@ -16,7 +16,7 @@ pre-`1.0`, only the latest `0.0.x` receives fixes.
 | 0.0.88 (unreleased, the first release) | In development | Yes, before release |
 
 The client is tested against the pain001 server pinned in
-`ci/server-requirements.in` (0.0.87, the latest released server).
+`ci/server-requirements.in` (0.0.88, the latest released server).
 
 ## Read first
 

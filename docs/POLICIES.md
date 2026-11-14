@@ -44,7 +44,7 @@ and supported servers, and where each is enforced.
 ## Supported servers
 
 - CI tests against the pain001 server pinned in
-  `ci/server-requirements.in`: the latest released core, 0.0.87 today.
+  `ci/server-requirements.in`: the latest released core, 0.0.88 today.
 - The vendored conformance kit is byte-identical to core's and pinned
   by `conformance/SHA256SUMS`.
 - The client works with pain001 0.0.85 or newer. Before 0.0.87 a
