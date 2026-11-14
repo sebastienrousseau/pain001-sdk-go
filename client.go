@@ -94,13 +94,33 @@ func (c *Client) Request(ctx context.Context, method, path string, body any) (in
 	if len(bytes.TrimSpace(raw)) == 0 {
 		return status, nil, nil
 	}
+	doc, err := decodeJSON(raw)
+	if err != nil {
+		return status, nil, fmt.Errorf("pain001: %s %s: HTTP %d response is not JSON: %w", method, path, status, err)
+	}
+	return status, doc, nil
+}
+
+// jsonSpace is the whitespace JSON allows between tokens.
+const jsonSpace = " \t\r\n"
+
+// errTrailingData reports a body with more after its first JSON value.
+var errTrailingData = errors.New("data after the JSON value")
+
+// decodeJSON decodes raw as exactly one JSON value, numbers as
+// json.Number. Anything but JSON whitespace after the value is an
+// error, as it is for json.Unmarshal in the typed methods.
+func decodeJSON(raw []byte) (any, error) {
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	dec.UseNumber()
 	var doc any
 	if err := dec.Decode(&doc); err != nil {
-		return status, nil, fmt.Errorf("pain001: %s %s: HTTP %d response is not JSON: %w", method, path, status, err)
+		return nil, err
 	}
-	return status, doc, nil
+	if len(bytes.Trim(raw[dec.InputOffset():], jsonSpace)) > 0 {
+		return nil, errTrailingData
+	}
+	return doc, nil
 }
 
 // call sends one call and decodes a 2xx body into out; any other status

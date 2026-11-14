@@ -46,3 +46,11 @@ The first release will be 0.0.86, with pain001 0.0.86.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
   0.0.86 installed from hash-pinned requirements.
+
+### Fixed
+
+- `Request` reported a body with data after its first JSON value (`000`,
+  `{"a":1} trailing`, `0` followed by a form feed) as that value with no
+  error, so a garbled response passed the conformance runner while the
+  typed methods rejected it. It now returns an error for anything but
+  JSON whitespace after the value. Found by `FuzzRequest`.

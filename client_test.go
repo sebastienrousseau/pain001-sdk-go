@@ -192,6 +192,19 @@ func TestRequestEdgeCases(t *testing.T) {
 	}
 }
 
+func TestRequestRejectsDataAfterTheJSONValue(t *testing.T) {
+	for _, body := range []string{`000`, `{"status":"healthy"} trailing`, `{}{}`} {
+		c, _ := stub(t, 200, body)
+		if _, doc, err := c.Request(context.Background(), "GET", "/x", nil); !errors.Is(err, errTrailingData) {
+			t.Errorf("%s: doc %v, err %v, want trailing-data error", body, doc, err)
+		}
+	}
+	c, _ := stub(t, 200, " {\"a\":1} \n")
+	if _, doc, err := c.Request(context.Background(), "GET", "/x", nil); err != nil || doc == nil {
+		t.Errorf("trailing whitespace: doc %v, err %v", doc, err)
+	}
+}
+
 func TestResponseSizeIsCapped(t *testing.T) {
 	old := maxResponseBytes
 	maxResponseBytes = 8
