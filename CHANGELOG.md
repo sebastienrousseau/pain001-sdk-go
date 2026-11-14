@@ -47,6 +47,12 @@ CI tests against pain001 0.0.87, the latest released server.
   `timeout`, `apikey` and `retry`. `make examples` builds them all and
   runs each against `PAIN001_BASE_URL`; each exits non-zero when the
   server does not answer as it expects. `make conformance` runs them.
+- Benchmarks for every public method (`bench_test.go`, `make bench`):
+  `BenchmarkClient` measures the client's own request building and
+  response decoding against responses recorded from pain001 0.0.87
+  (`testdata/bench`, `scripts/record-bench-responses.sh`), with no
+  network; `BenchmarkLive` measures one loopback round trip to
+  `PAIN001_BASE_URL`. CI smoke-runs both on every pull request.
 - Fuzz targets for the client's handling of untrusted responses:
   `FuzzRequest`, `FuzzTypedMethods`, `FuzzAPIError`,
   `FuzzErrorOmitsRejectedInput` and `FuzzRefusalOmitsFindings`, seeded

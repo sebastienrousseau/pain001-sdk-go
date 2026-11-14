@@ -10,7 +10,7 @@ GOCYCLO     := github.com/fzipp/gocyclo/cmd/gocyclo@v0.6.0
 GOCOGNIT    := github.com/uudashr/gocognit/cmd/gocognit@v1.3.0
 GOVULNCHECK := golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
-.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance examples fuzz demo
+.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance examples bench fuzz demo
 
 check: versions fmt-check vet staticcheck complexity vulncheck build test conformance
 
@@ -59,6 +59,18 @@ conformance:
 	else \
 		go test -race -count=1 -v -run 'TestConformance|TestLive' . && $(MAKE) examples; \
 	fi
+
+# Benchmarks every public method (bench_test.go): BenchmarkClient, the
+# client's own cost against recorded responses with no network, and
+# BenchmarkLive, a loopback round trip to PAIN001_BASE_URL (skipped when
+# unset). The output, also written to bin/bench.txt, is benchstat input.
+# CI smoke-runs it with BENCHCOUNT=1 BENCHTIME=1x.
+BENCHCOUNT ?= 6
+BENCHTIME ?= 1s
+
+bench:
+	mkdir -p bin
+	go test -run '^$$' -bench . -benchmem -count $(BENCHCOUNT) -benchtime $(BENCHTIME) . | tee bin/bench.txt
 
 # Fuzzes each Fuzz target the package lists for FUZZTIME (go test runs
 # only the seeds and testdata/fuzz). A crash leaves its input in
