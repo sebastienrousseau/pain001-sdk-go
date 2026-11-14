@@ -28,6 +28,27 @@ PAIN001_BASE_URL=http://127.0.0.1:8000 make check
 Use synthetic data only. The kit's fixtures are synthetic; never add
 real account numbers or personal data to a test.
 
+## The README demo
+
+`.github/demo.gif` is rendered from `.github/demo.tape` by
+[vhs](https://github.com/charmbracelet/vhs) (which needs `ttyd` and
+`ffmpeg`). The tape copies the tracked files into a temporary directory,
+starts `pain001 serve` on `127.0.0.1`, runs the typed live tests and
+`examples/basic` against it, and stops the server; nothing leaves
+loopback. Install the server CI pins into a virtual environment, then
+point `make demo` at its binary (it falls back to `pain001` on `PATH`):
+
+```sh
+uv venv --python 3.12 /tmp/pain001-srv
+uv pip install --python /tmp/pain001-srv/bin/python \
+  --require-hashes -r ci/server-requirements.txt
+PAIN001_SERVER=/tmp/pain001-srv/bin/pain001 make demo
+```
+
+`DEMO_PORT` picks the port (default 18765). Re-render the GIF in the
+same change whenever the example or the typed methods change what it
+shows.
+
 ## What the tests are for
 
 - `client_test.go`, `errors_test.go`: requests, headers, timeouts and
