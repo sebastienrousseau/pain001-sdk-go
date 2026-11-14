@@ -8,10 +8,19 @@ and versions advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
-The first release will be 0.0.86, with pain001 0.0.86.
+The first release will be 0.0.88, in lockstep with the pain001 suite.
+CI tests against pain001 0.0.87, the latest released server.
 
 ### Added
 
+- `Version`, the module's release, and a `User-Agent:
+  pain001-sdk-go/<Version>` header on every request, so a server's
+  access log shows which SDK and release sent a call.
+- `WithRetry(RetryPolicy{...})`: opt-in retries for idempotent calls
+  only (`Health`, `Faces`, and `Request` with GET). It retries a failed
+  connection and a `429` or `503`, waits with exponential backoff and
+  jitter or for the response's `Retry-After`, and never retries a POST.
+  Off by default, so a client without it behaves as before.
 - `pain001.NewClient` with `WithAPIKey`, `WithHTTPClient` and
   `WithTimeout`; typed `Health`, `Validate`, `Generate`, `Check`,
   `Faces` and `ProjectFace` methods, each taking a `context.Context`;
@@ -32,6 +41,25 @@ The first release will be 0.0.86, with pain001 0.0.86.
   `Generate` now always comes with the XML.
 - `examples/basic`, which generates pain.001.001.09 from the kit's
   credit-transfer fixture and prints each finding of a refusal.
+- One runnable program per method under `examples/`: `health`,
+  `validate`, `basic` (generate), `check`, `faces`, `projectface`,
+  `request`, `errors` (`*APIError`, `*RefusalError`, `ErrNoDocument`),
+  `timeout`, `apikey` and `retry`. `make examples` builds them all and
+  runs each against `PAIN001_BASE_URL`; each exits non-zero when the
+  server does not answer as it expects. `make conformance` runs them.
+- Benchmarks for every public method (`bench_test.go`, `make bench`):
+  `BenchmarkClient` measures the client's own request building and
+  response decoding against responses recorded from pain001 0.0.87
+  (`testdata/bench`, `scripts/record-bench-responses.sh`), with no
+  network; `BenchmarkLive` measures one loopback round trip to
+  `PAIN001_BASE_URL`. CI smoke-runs both on every pull request.
+- `make regression` (`scripts/regression.sh`): installs the pinned
+  server into a temporary venv unless `PAIN001_SERVER` is set, starts
+  it on a free loopback port with a random API key, runs `make check`
+  (with the conformance kit, the live tests and every example) and the
+  benchmark smoke against it, and stops it even on failure. CI's
+  conformance job runs the same script. `VULNDB` points `make
+  vulncheck` at a local copy of the Go vulnerability database.
 - Fuzz targets for the client's handling of untrusted responses:
   `FuzzRequest`, `FuzzTypedMethods`, `FuzzAPIError`,
   `FuzzErrorOmitsRejectedInput` and `FuzzRefusalOmitsFindings`, seeded
@@ -46,7 +74,53 @@ The first release will be 0.0.86, with pain001 0.0.86.
   `FuzzTypedMethods`.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
-  0.0.86 installed from hash-pinned requirements.
+  0.0.87 installed from hash-pinned requirements.
+- CI: an API-breakage job (`scripts/api-check.sh`, gorelease against
+  the last tag, a no-op until the first tag exists), and the
+  conformance job now runs `make regression`, adding every example and
+  the benchmark smoke against a server started with an API key.
+- A tag-triggered release workflow (`.github/workflows/release.yml`)
+  with a `workflow_dispatch` dry run: it verifies the signed annotated
+  tag and every version restatement, runs the tests and the API check,
+  builds the source archive, a CycloneDX SBOM and `SHA256SUMS`
+  (`scripts/release-artifacts.sh`), attests their provenance, writes
+  the GitHub release in the suite's format (`scripts/release-notes.sh`,
+  Highlights from `.github/release-highlights.md`), audits it, and
+  publishes the module by warming proxy.golang.org. Safe to re-run.
+- REUSE compliance (`REUSE.toml`, `LICENSES/`) and codespell
+  (`.codespellrc`) in the Docs lint workflow, next to markdownlint;
+  `make docs-lint` runs all three. `.editorconfig`,
+  `.pre-commit-config.yaml` (hooks that call the same make targets) and
+  a `.devcontainer/` that boots to a working `make check`. Dependabot
+  now watches the Python tool locks in `ci/` (not the server pin) and
+  the devcontainer features.
+- The user manual: MkDocs Material from `docs/` (`mkdocs.yml`), built
+  with `--strict` in CI and deployed to GitHub Pages by
+  `.github/workflows/docs.yml` once Pages is switched on, with the
+  author link on every page (`scripts/check-site-footer.sh`). New pages:
+  a usage guide, the example index, `ARCHITECTURE.md`, `COMPARISON.md`
+  (the suite's shared table with evidence links), `BENCHMARKS.md`
+  (method, environment and measured numbers), `POLICIES.md`,
+  `ROADMAP.md`, `packaging.md`, and ADRs 0001 to 0004 (thin client,
+  standard library only, error model, opt-in retries). Root
+  `DEVELOPMENT.md` (every CI gate reproduced locally, test layout,
+  release model, settings the maintainer creates) and `GOVERNANCE.md`
+  (roles, decisions, continuity plan).
+- The README follows the workspace template in full: the suite's
+  ecosystem comparison table, measured benchmark numbers, an example
+  table covering every method, the five SDKs in the family map, and a
+  registry badge that tracks the latest tag.
+- `scripts/verify-release-versions`, run by `make check` and CI: fails
+  when `version.go`, `CITATION.cff`, the `SECURITY.md` and `SUPPORT.md`
+  support tables, a Markdown install snippet or the `CHANGELOG.md`
+  heading disagree, or when the server pin and its lock name different
+  pain001 releases. `--release` also requires the dated release heading.
+- A 100.0% statement-coverage floor: `make test` runs
+  `scripts/coverage.sh`, which fails below it, on both Go versions in
+  CI. `halstead_test.go` holds every function to a Halstead difficulty
+  of 30, the last of the workspace's complexity ceilings without a gate.
+- `SUPPORT.md`: where to ask, what to include, and which versions get
+  fixes.
 - The README demo, `.github/demo.gif`, rendered by `make demo` from
   `.github/demo.tape` with vhs: the typed live tests and
   `examples/basic` against a `pain001 serve` the tape starts on

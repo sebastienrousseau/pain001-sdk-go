@@ -1,0 +1,82 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# The user manual, built from docs/ with MkDocs Material:
+#   make docs        # strict build into site/ (gitignored)
+# CI builds it with --strict on every pull request; the Pages workflow
+# (.github/workflows/docs.yml) deploys it from main. Root-level files
+# (DEVELOPMENT.md, CHANGELOG.md, ...) are included by docs/project/*
+# stubs, not copied.
+site_name: pain001-sdk-go
+site_description: A typed Go client for the pain001 REST API.
+site_url: https://sebastienrousseau.github.io/pain001-sdk-go/
+repo_url: https://github.com/sebastienrousseau/pain001-sdk-go
+repo_name: sebastienrousseau/pain001-sdk-go
+edit_uri: edit/main/docs/
+docs_dir: docs
+strict: true
+copyright: >-
+  © 2026 <a href="https://sebastienrousseau.com/" rel="author">Sebastien Rousseau</a>.
+  Apache-2.0 OR MIT.
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+nav:
+  - Home: index.md
+  - Guide:
+      - Using the client: guide.md
+      - Examples: examples.md
+      - API reference (pkg.go.dev): https://pkg.go.dev/github.com/sebastienrousseau/pain001-sdk-go
+  - Design:
+      - Architecture: ARCHITECTURE.md
+      - Decisions: adr/README.md
+      - "0001 Thin client": adr/0001-thin-client-over-the-server.md
+      - "0002 Standard library only": adr/0002-standard-library-only.md
+      - "0003 Error model": adr/0003-error-model.md
+      - "0004 Opt-in retries": adr/0004-opt-in-retries.md
+  - Evidence:
+      - Ecosystem comparison: COMPARISON.md
+      - Benchmarks: BENCHMARKS.md
+  - Project:
+      - Development: project/development.md
+      - Policies: POLICIES.md
+      - Packaging: packaging.md
+      - Roadmap: ROADMAP.md
+      - Changelog: project/changelog.md
+      - Security: project/security.md
+      - Support: project/support.md
+      - Governance: project/governance.md

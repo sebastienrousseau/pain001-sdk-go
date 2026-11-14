@@ -29,6 +29,7 @@ type Client struct {
 	apiKey     string
 	httpClient *http.Client
 	timeout    time.Duration
+	retry      *retrier
 }
 
 // Option configures a Client in NewClient.
@@ -139,7 +140,8 @@ func (c *Client) call(ctx context.Context, method, path string, body, out any) e
 	return nil
 }
 
-// send performs the HTTP exchange and returns the status and raw body.
+// send performs the HTTP exchange and returns the status and raw body,
+// retrying under the client's RetryPolicy when it has one.
 func (c *Client) send(ctx context.Context, method, path string, body any) (int, []byte, error) {
 	if !strings.HasPrefix(path, "/") {
 		return 0, nil, fmt.Errorf("pain001: path %q must start with /", path)
@@ -149,23 +151,34 @@ func (c *Client) send(ctx context.Context, method, path string, body any) (int, 
 		ctx, cancel = context.WithTimeout(ctx, c.timeout)
 		defer cancel()
 	}
+	for n := 1; ; n++ {
+		o := c.attempt(ctx, method, path, body)
+		d, again := c.retry.wait(method, n, o)
+		if !again || c.retry.sleep(ctx, d) != nil {
+			return o.status, o.raw, o.err
+		}
+	}
+}
+
+// attempt performs one HTTP exchange.
+func (c *Client) attempt(ctx context.Context, method, path string, body any) outcome {
 	req, err := c.newRequest(ctx, method, path, body)
 	if err != nil {
-		return 0, nil, err
+		return outcome{err: err}
 	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return 0, nil, fmt.Errorf("pain001: %s %s: %w", method, path, err)
+		return outcome{err: fmt.Errorf("pain001: %s %s: %w", method, path, err), transient: ctx.Err() == nil}
 	}
 	defer resp.Body.Close()
 	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes+1))
 	if err != nil {
-		return 0, nil, fmt.Errorf("pain001: %s %s: reading response: %w", method, path, err)
+		return outcome{err: fmt.Errorf("pain001: %s %s: reading response: %w", method, path, err)}
 	}
 	if int64(len(raw)) > maxResponseBytes {
-		return 0, nil, fmt.Errorf("pain001: %s %s: %w", method, path, ErrResponseTooLarge)
+		return outcome{err: fmt.Errorf("pain001: %s %s: %w", method, path, ErrResponseTooLarge)}
 	}
-	return resp.StatusCode, raw, nil
+	return outcome{status: resp.StatusCode, raw: raw, retryAfter: resp.Header.Get("Retry-After")}
 }
 
 // ErrResponseTooLarge reports a response body over the client's cap.
@@ -186,6 +199,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body any) 
 		return nil, fmt.Errorf("pain001: %s %s: %w", method, path, err)
 	}
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", userAgent)
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}

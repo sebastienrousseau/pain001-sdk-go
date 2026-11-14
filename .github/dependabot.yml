@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
-# The server pin in ci/server-requirements.in is left out on purpose: it
-# moves with the suite release (SDK 0.0.N tests against core 0.0.N).
+# The pain001 server pin in ci/server-requirements.in is ignored on
+# purpose: it moves with the suite release, by hand. Its transitive
+# dependencies and the docs and lint tool locks in ci/ are updated.
 version: 2
 updates:
   - package-ecosystem: "gomod"
@@ -32,3 +33,29 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  - package-ecosystem: "pip"
+    directory: "/ci"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    ignore:
+      - dependency-name: "pain001"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "build(deps):"
+    groups:
+      python-tools:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "automated"

@@ -14,10 +14,12 @@ Everything CI checks, you can run locally with Go 1.26 or newer:
 make check
 ```
 
-That runs `gofmt -l`, `go vet`, staticcheck, the gocyclo and gocognit
-ceilings, `go build` and `go test -race`. To add the conformance kit,
-the typed tests and the example, start a server and point the tests at
-it:
+That runs the version check, `gofmt -l`, `go vet`, staticcheck, the
+gocyclo and gocognit ceilings, govulncheck, `go build` and
+`go test -race` at 100% statement coverage. `make regression` runs it
+against a pinned server it starts itself, as CI does. To add the
+conformance kit, the typed tests and the examples against a server you
+run, point the tests at it:
 
 ```sh
 pip install 'pain001[api]==0.0.87'
@@ -51,8 +53,12 @@ shows.
 
 ## What the tests are for
 
-- `client_test.go`, `errors_test.go`: requests, headers, timeouts and
-  error mapping against a stub server; no pain001 needed.
+- `client_test.go`, `errors_test.go`, `version_test.go`: requests,
+  headers, timeouts and error mapping against a stub server; no
+  pain001 needed.
+- `retry_test.go`: every branch of the opt-in retry policy.
+- `bench_test.go`: benchmarks for every method, client-side and over
+  loopback (`make bench`).
 - `internal/kit/`: the conformance runner (JSON Pointer, `$file`
   substitution, expectations), unit-tested without a server.
 - `conformance_test.go`: every case in `conformance/cases.json` through
@@ -60,8 +66,8 @@ shows.
   skip when `PAIN001_BASE_URL` is unset.
 - `kit_test.go`: the vendored kit matches `conformance/SHA256SUMS`, and
   `MessageTypes()` matches the kit's `openapi.json`.
-- `size_test.go`: every function within 60 lines and every file within
-  500.
+- `size_test.go`, `halstead_test.go`: every function within 60 lines
+  and a Halstead difficulty of 30, every file within 500 lines.
 - `fuzz_test.go`: native Go fuzz targets that feed arbitrary statuses
   and bodies to `Request`, the typed methods and the error mapping, and
   check that the client never panics, returns a value or a documented
@@ -69,6 +75,9 @@ shows.
   error message. `go test` runs their seeds and `testdata/fuzz`;
   `make fuzz` fuzzes each for `FUZZTIME` (default 60s). Commit any
   crashing input it writes to `testdata/fuzz` with the fix.
+
+[DEVELOPMENT.md](https://github.com/sebastienrousseau/pain001-sdk-go/blob/main/DEVELOPMENT.md)
+maps every CI gate to its local command.
 
 ## The conformance kit
 

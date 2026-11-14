@@ -23,6 +23,7 @@
     "conformance/**",
     // Go build output.
     "bin/**",
-    "dist/**"
+    "dist/**",
+    "site/**"
   ]
 }

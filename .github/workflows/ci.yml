@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 #
-# Lint, build and unit-test the client on the two Go releases the Go
-# team supports, then run the conformance kit and the typed tests
-# against a real `pain001 serve` installed from hash-pinned
-# requirements.
+# Lint, build and unit-test the client (100% statement coverage) on the
+# two Go releases the Go team supports, fuzz it, check the exported API
+# against the last tag, then run the full regression (conformance kit,
+# typed live tests, every example and the benchmark smoke) against a
+# real `pain001 serve` installed from hash-pinned requirements.
 name: CI
 
 on:
@@ -21,6 +22,8 @@ concurrency:
 
 jobs:
   lint:
+    # The job names are required status checks on main; renaming one
+    # needs the branch protection updated in the same change.
     name: gofmt, vet, staticcheck, complexity
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -32,7 +35,7 @@ jobs:
         with:
           go-version: "1.27"
           cache: false
-      - run: make fmt-check vet staticcheck complexity
+      - run: make versions fmt-check vet staticcheck complexity
 
   vulncheck:
     name: govulncheck (dependency advisories)
@@ -94,10 +97,31 @@ jobs:
           path: testdata/fuzz
           if-no-files-found: ignore
 
+  api:
+    name: API-breakage check (gorelease)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # gorelease compares the exported API with the last release tag; a
+    # no-op until the first tag exists (scripts/api-check.sh).
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+          cache: false
+      - run: scripts/api-check.sh
+
   conformance:
     name: conformance kit against pain001 serve
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    # make regression installs the server from hash-pinned requirements
+    # into a temporary venv, starts it on loopback with an API key, runs
+    # make check against it (the conformance kit, the typed live tests
+    # and every example) and smoke-runs every benchmark, then stops it.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -105,29 +129,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-      - name: Install the server from hash-pinned requirements
-        run: |
-          python -m venv "$RUNNER_TEMP/srv"
-          "$RUNNER_TEMP/srv/bin/python" -m pip install --quiet --require-hashes -r ci/server-requirements.txt
-      - name: Start pain001 serve and wait for /api/v1/health
-        run: |
-          set -euo pipefail
-          cd "$RUNNER_TEMP"
-          nohup "$RUNNER_TEMP/srv/bin/pain001" serve --host 127.0.0.1 --port 8000 > server.log 2>&1 &
-          for _ in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:8000/api/v1/health; then exit 0; fi
-            sleep 1
-          done
-          cat server.log
-          exit 1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "1.27"
           cache: false
-      - name: Conformance, typed tests and the example
-        env:
-          PAIN001_BASE_URL: http://127.0.0.1:8000
-        run: make conformance
-      - name: Server log
-        if: failure()
-        run: cat "$RUNNER_TEMP/server.log"
+      - run: make regression

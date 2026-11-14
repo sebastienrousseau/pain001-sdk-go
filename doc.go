@@ -26,6 +26,8 @@
 //		// apiErr.Status, apiErr.Detail
 //	}
 //
-// The client never retries and never logs: request bodies hold payment
-// data, so nothing here writes them anywhere.
+// The client never logs: request bodies hold payment data, so nothing
+// here writes them anywhere. It makes one attempt per call unless
+// WithRetry opts in, and even then retries only GET calls (Health, Faces
+// and Request with GET), never a POST that could submit a file twice.
 package pain001

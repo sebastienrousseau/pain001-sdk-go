@@ -4,9 +4,10 @@
 /dist/
 *.test
 *.out
-coverage.*
+/coverage.*
 # Editor and OS files
 .DS_Store
 .idea/
 .vscode/
 node_modules/
+/site/
