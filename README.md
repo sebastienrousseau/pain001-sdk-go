@@ -288,9 +288,11 @@ PAIN001_BASE_URL=http://127.0.0.1:8000 make check
 (cyclomatic 10) and gocognit (cognitive 15) ceilings, `go build` and
 `go test -race` with coverage; a test holds functions to 60 lines and
 files to 500. The analysers run through `go run` at pinned versions, so
-nothing is installed globally. CI adds a Go 1.26 and 1.27 matrix, a
-conformance job against `pain001 serve` installed from hash-pinned
-requirements, markdownlint and the DCO check. See
+nothing is installed globally. `go test` also runs the fuzz targets'
+seeds; `make fuzz` fuzzes each target for a minute (`FUZZTIME=30s` to
+change it). CI adds a Go 1.26 and 1.27 matrix, 30 seconds of fuzzing
+per target, a conformance job against `pain001 serve` installed from
+hash-pinned requirements, markdownlint and the DCO check. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---

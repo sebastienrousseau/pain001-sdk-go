@@ -35,8 +35,9 @@ The first release will be 0.0.86, with pain001 0.0.86.
 - Fuzz targets for the client's handling of untrusted responses:
   `FuzzRequest`, `FuzzTypedMethods`, `FuzzAPIError`,
   `FuzzErrorOmitsRejectedInput` and `FuzzRefusalOmitsFindings`, seeded
-  from the conformance kit's responses. `go test` runs their seeds, and
-  `make fuzz` fuzzes each for a minute.
+  from the conformance kit's responses. `go test` runs their seeds,
+  `make fuzz` fuzzes each for a minute, and a CI job fuzzes each for 30
+  seconds on every push and pull request.
 - `ErrNoDocument`: `Generate` now returns an error wrapping it when a
   `2xx` response carries no XML (`success: false` or an empty `xml`),
   as a server older than pain001 0.0.87 sends for a refusal. It used to
