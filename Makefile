@@ -10,7 +10,7 @@ GOCYCLO     := github.com/fzipp/gocyclo/cmd/gocyclo@v0.6.0
 GOCOGNIT    := github.com/uudashr/gocognit/cmd/gocognit@v1.3.0
 GOVULNCHECK := golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
-.PHONY: check fmt-check fmt vet staticcheck complexity vulncheck build test conformance example
+.PHONY: check fmt-check fmt vet staticcheck complexity vulncheck build test conformance example fuzz
 
 check: fmt-check vet staticcheck complexity vulncheck build test conformance
 
@@ -50,6 +50,19 @@ conformance:
 	else \
 		go test -race -count=1 -v -run 'TestConformance|TestLive' . && $(MAKE) example; \
 	fi
+
+# Fuzzes each Fuzz target the package lists for FUZZTIME (go test runs
+# only the seeds and testdata/fuzz). A crash leaves its input in
+# testdata/fuzz; commit it as a regression with the fix.
+FUZZTIME ?= 60s
+
+fuzz:
+	@set -e; targets="$$(go test -list '^Fuzz' . | grep '^Fuzz')"; \
+	test -n "$$targets"; \
+	for target in $$targets; do \
+		echo "fuzz: $$target for $(FUZZTIME)"; \
+		go test -run='^$$' -fuzz="^$$target$$" -fuzztime=$(FUZZTIME) . ; \
+	done
 
 # Writes into bin/, which .gitignore excludes.
 example:

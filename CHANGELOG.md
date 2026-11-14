@@ -32,6 +32,11 @@ The first release will be 0.0.86, with pain001 0.0.86.
   `Generate` now always comes with the XML.
 - `examples/basic`, which generates pain.001.001.09 from the kit's
   credit-transfer fixture and prints each finding of a refusal.
+- Fuzz targets for the client's handling of untrusted responses:
+  `FuzzRequest`, `FuzzTypedMethods`, `FuzzAPIError`,
+  `FuzzErrorOmitsRejectedInput` and `FuzzRefusalOmitsFindings`, seeded
+  from the conformance kit's responses. `go test` runs their seeds, and
+  `make fuzz` fuzzes each for a minute.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
   0.0.86 installed from hash-pinned requirements.
