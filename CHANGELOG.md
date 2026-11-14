@@ -53,6 +53,13 @@ CI tests against pain001 0.0.87, the latest released server.
   (`testdata/bench`, `scripts/record-bench-responses.sh`), with no
   network; `BenchmarkLive` measures one loopback round trip to
   `PAIN001_BASE_URL`. CI smoke-runs both on every pull request.
+- `make regression` (`scripts/regression.sh`): installs the pinned
+  server into a temporary venv unless `PAIN001_SERVER` is set, starts
+  it on a free loopback port with a random API key, runs `make check`
+  (with the conformance kit, the live tests and every example) and the
+  benchmark smoke against it, and stops it even on failure. CI's
+  conformance job runs the same script. `VULNDB` points `make
+  vulncheck` at a local copy of the Go vulnerability database.
 - Fuzz targets for the client's handling of untrusted responses:
   `FuzzRequest`, `FuzzTypedMethods`, `FuzzAPIError`,
   `FuzzErrorOmitsRejectedInput` and `FuzzRefusalOmitsFindings`, seeded

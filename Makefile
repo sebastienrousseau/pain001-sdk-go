@@ -10,7 +10,7 @@ GOCYCLO     := github.com/fzipp/gocyclo/cmd/gocyclo@v0.6.0
 GOCOGNIT    := github.com/uudashr/gocognit/cmd/gocognit@v1.3.0
 GOVULNCHECK := golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
-.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance examples bench fuzz demo
+.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance examples bench regression fuzz demo
 
 check: versions fmt-check vet staticcheck complexity vulncheck build test conformance
 
@@ -34,8 +34,12 @@ staticcheck:
 # Known vulnerabilities reachable from this module. The client has no
 # third-party dependencies (no go.sum), so this covers the Go standard
 # library and toolchain in use; it needs network access to vuln.go.dev.
+# VULNDB points it at a local copy of the database (file:///path), for a
+# machine where Go cannot reach vuln.go.dev directly.
+VULNDB ?=
+
 vulncheck:
-	go run $(GOVULNCHECK) ./...
+	go run $(GOVULNCHECK) $(if $(VULNDB),-db $(VULNDB)) ./...
 
 # Cyclomatic <= 10 and cognitive <= 15 per function; size_test.go holds
 # 60 lines per function and 500 per file, halstead_test.go a Halstead
@@ -71,6 +75,13 @@ BENCHTIME ?= 1s
 bench:
 	mkdir -p bin
 	go test -run '^$$' -bench . -benchmem -count $(BENCHCOUNT) -benchtime $(BENCHTIME) . | tee bin/bench.txt
+
+# The full regression run CI's conformance job makes: installs the
+# pinned server into a temporary venv (unless PAIN001_SERVER is set),
+# starts it on a free loopback port with an API key, runs `make check`
+# and the benchmark smoke against it, and stops it even on failure.
+regression:
+	scripts/regression.sh
 
 # Fuzzes each Fuzz target the package lists for FUZZTIME (go test runs
 # only the seeds and testdata/fuzz). A crash leaves its input in
