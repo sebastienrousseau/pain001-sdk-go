@@ -16,6 +16,11 @@ CI tests against pain001 0.0.87, the latest released server.
 - `Version`, the module's release, and a `User-Agent:
   pain001-sdk-go/<Version>` header on every request, so a server's
   access log shows which SDK and release sent a call.
+- `WithRetry(RetryPolicy{...})`: opt-in retries for idempotent calls
+  only (`Health`, `Faces`, and `Request` with GET). It retries a failed
+  connection and a `429` or `503`, waits with exponential backoff and
+  jitter or for the response's `Retry-After`, and never retries a POST.
+  Off by default, so a client without it behaves as before.
 - `pain001.NewClient` with `WithAPIKey`, `WithHTTPClient` and
   `WithTimeout`; typed `Health`, `Validate`, `Generate`, `Check`,
   `Faces` and `ProjectFace` methods, each taking a `context.Context`;

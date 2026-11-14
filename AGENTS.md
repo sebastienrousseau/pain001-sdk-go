@@ -22,8 +22,10 @@ client, held to the same conformance kit. Read
 - **Standard library only.** No third-party module in `go.mod`;
   analysers run through `go run <module>@<pinned version>`.
 - **Every method takes a `context.Context` first**, and a non-2xx
-  response is an `*APIError`. No retries, no logging, and no request
-  body or rejected input in an error message.
+  response is an `*APIError`. No logging, and no request body or
+  rejected input in an error message. Retries only through the opt-in
+  `WithRetry`, and only for GET; a POST is never retried
+  (`docs/adr/0004-opt-in-retries.md`).
 - **Complexity**: cyclomatic 10 and cognitive 15 per function (gocyclo,
   gocognit), 60 lines per function and 500 per file (`size_test.go`).
 - **Data**: synthetic only. No real account numbers or personal data.
