@@ -75,6 +75,10 @@ CI tests against pain001 0.0.87, the latest released server.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
   0.0.87 installed from hash-pinned requirements.
+- CI: an API-breakage job (`scripts/api-check.sh`, gorelease against
+  the last tag, a no-op until the first tag exists), and the
+  conformance job now runs `make regression`, adding every example and
+  the benchmark smoke against a server started with an API key.
 - `scripts/verify-release-versions`, run by `make check` and CI: fails
   when `version.go`, `CITATION.cff`, the `SECURITY.md` and `SUPPORT.md`
   support tables, a Markdown install snippet or the `CHANGELOG.md`
