@@ -62,11 +62,11 @@
 ### As a Go library
 
 ```sh
-go get github.com/sebastienrousseau/pain001-sdk-go
+go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.88
 ```
 
 > **Not yet published.** The module has no tagged release yet; the first
-> will be 0.0.87, in lockstep with the pain001 suite. Until then the
+> will be 0.0.88, in lockstep with the pain001 suite. Until then the
 > command above does not resolve.
 
 The module uses the Go standard library only. It needs a running

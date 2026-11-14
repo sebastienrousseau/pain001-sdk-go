@@ -1,0 +1,93 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Fails when a file that restates the module version disagrees with
+# version.go, or when the server pin disagrees with itself.
+#
+#   scripts/verify-release-versions            # during development
+#   scripts/verify-release-versions --release  # before a tag: the
+#       CHANGELOG must carry "## [<version>] - <date>", not Unreleased
+#   TAG=v0.0.88 scripts/verify-release-versions --release
+#       # also checks that version.go matches the tag
+#
+# POSIX sh, so it runs in CI, the devcontainer and on macOS unchanged.
+set -eu
+
+cd "$(dirname "$0")/.."
+
+release=0
+if [ "${1:-}" = "--release" ]; then
+  release=1
+fi
+
+failures=0
+fail() {
+  echo "verify-release-versions: $*" >&2
+  failures=$((failures + 1))
+}
+
+version="$(sed -n 's/^const Version = "\([0-9][0-9.]*\)"$/\1/p' version.go)"
+if [ -z "$version" ]; then
+  echo "verify-release-versions: no 'const Version = \"x.y.z\"' in version.go" >&2
+  exit 1
+fi
+
+if [ -n "${TAG:-}" ] && [ "$TAG" != "v$version" ]; then
+  fail "tag $TAG does not match version.go ($version)"
+fi
+
+grep -qx "version: \"$version\"" CITATION.cff ||
+  fail "CITATION.cff version is not \"$version\""
+
+# The first row of each support table names the current version.
+for file in SECURITY.md SUPPORT.md; do
+  row="$(grep -m1 '^| 0\.' "$file" || true)"
+  case "$row" in
+    "| $version "*) ;;
+    *) fail "$file: first support row is '$row', want version $version" ;;
+  esac
+done
+
+# Every install snippet in tracked Markdown names this version.
+snippets="$(git ls-files '*.md' | xargs grep -ho 'pain001-sdk-go@v[0-9][0-9.]*' || true)"
+if [ -z "$snippets" ]; then
+  fail "no 'go get ...pain001-sdk-go@v$version' install snippet in any Markdown file"
+fi
+for s in $snippets; do
+  [ "$s" = "pain001-sdk-go@v$version" ] || fail "install snippet $s, want pain001-sdk-go@v$version"
+done
+
+# CHANGELOG: the first release heading is Unreleased while in
+# development, and "[<version>] - <date>" for a release.
+heading="$(grep -m1 '^## \[' CHANGELOG.md || true)"
+if [ "$release" -eq 1 ]; then
+  echo "$heading" | grep -Eq "^## \[$version\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" ||
+    fail "CHANGELOG.md: first heading is '$heading', want '## [$version] - YYYY-MM-DD'"
+else
+  case "$heading" in
+    "## [Unreleased]" | "## [$version] - "*) ;;
+    *) fail "CHANGELOG.md: first heading is '$heading', want '## [Unreleased]' or '## [$version] - <date>'" ;;
+  esac
+fi
+
+# The server pin: the .in, the locked .txt and the documented install
+# command name one pain001 release.
+pin="$(sed -n 's/^pain001\[api\]==\([0-9.]*\)$/\1/p' ci/server-requirements.in)"
+if [ -z "$pin" ]; then
+  fail "ci/server-requirements.in does not pin pain001[api]==x.y.z"
+else
+  grep -q "^pain001==$pin " ci/server-requirements.txt ||
+    fail "ci/server-requirements.txt does not lock pain001 $pin; re-lock it"
+  for file in CONTRIBUTING.md DEVELOPMENT.md; do
+    [ -f "$file" ] || continue
+    for p in $(grep -ho "pain001\[api\]==[0-9][0-9.]*" "$file" || true); do
+      [ "$p" = "pain001[api]==$pin" ] || fail "$file: $p, want pain001[api]==$pin"
+    done
+  done
+fi
+
+if [ "$failures" -gt 0 ]; then
+  echo "verify-release-versions: $failures mismatch(es)" >&2
+  exit 1
+fi
+echo "verify-release-versions: $version everywhere; server pin $pin"

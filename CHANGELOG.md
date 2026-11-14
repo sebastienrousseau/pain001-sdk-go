@@ -8,7 +8,8 @@ and versions advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
-The first release will be 0.0.86, with pain001 0.0.86.
+The first release will be 0.0.88, in lockstep with the pain001 suite.
+CI tests against pain001 0.0.87, the latest released server.
 
 ### Added
 
@@ -49,7 +50,14 @@ The first release will be 0.0.86, with pain001 0.0.86.
   `FuzzTypedMethods`.
 - CI: gofmt, vet, staticcheck, gocyclo, gocognit, race-enabled tests on
   Go 1.26 and 1.27, and the conformance job against `pain001 serve`
-  0.0.86 installed from hash-pinned requirements.
+  0.0.87 installed from hash-pinned requirements.
+- `scripts/verify-release-versions`, run by `make check` and CI: fails
+  when `version.go`, `CITATION.cff`, the `SECURITY.md` and `SUPPORT.md`
+  support tables, a Markdown install snippet or the `CHANGELOG.md`
+  heading disagree, or when the server pin and its lock name different
+  pain001 releases. `--release` also requires the dated release heading.
+- `SUPPORT.md`: where to ask, what to include, and which versions get
+  fixes.
 - The README demo, `.github/demo.gif`, rendered by `make demo` from
   `.github/demo.tape` with vhs: the typed live tests and
   `examples/basic` against a `pain001 serve` the tape starts on

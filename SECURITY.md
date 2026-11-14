@@ -10,7 +10,7 @@ security fixes; older `0.0.x` versions do not.
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| Unreleased (first release 0.0.87) | In development | Fixes land before release |
+| 0.0.88 (unreleased, the first release) | In development | Fixes land before release |
 
 ## Reporting a vulnerability
 

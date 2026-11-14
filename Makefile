@@ -10,9 +10,14 @@ GOCYCLO     := github.com/fzipp/gocyclo/cmd/gocyclo@v0.6.0
 GOCOGNIT    := github.com/uudashr/gocognit/cmd/gocognit@v1.3.0
 GOVULNCHECK := golang.org/x/vuln/cmd/govulncheck@v1.9.0
 
-.PHONY: check fmt-check fmt vet staticcheck complexity vulncheck build test conformance example fuzz demo
+.PHONY: check versions fmt-check fmt vet staticcheck complexity vulncheck build test conformance example fuzz demo
 
-check: fmt-check vet staticcheck complexity vulncheck build test conformance
+check: versions fmt-check vet staticcheck complexity vulncheck build test conformance
+
+# Every file that restates the version agrees with version.go, and the
+# server pin agrees with its lock (scripts/verify-release-versions).
+versions:
+	scripts/verify-release-versions
 
 fmt-check:
 	@out="$$(gofmt -l .)"; if [ -n "$$out" ]; then echo "gofmt needed:"; echo "$$out"; exit 1; fi
