@@ -73,6 +73,9 @@ func TestTypedMethodsSendTheDocumentedRequests(t *testing.T) {
 		}, map[string]any{"content": "a,b", "filename": "p.csv", "message_type": "pain.001.001.09", "scheme": "sepa-sct"}},
 		{"generate", "POST", "/api/v1/ui/generate", func() error {
 			_, err := c.Generate(ctx, "a,b", "p.csv", "", "")
+			if errors.Is(err, ErrNoDocument) {
+				return nil // the stub's {} carries no XML; the request is what is checked
+			}
 			return err
 		}, map[string]any{"content": "a,b", "filename": "p.csv"}},
 		{"check", "POST", "/api/v1/check", func() error {
@@ -186,6 +189,19 @@ func TestRequestEdgeCases(t *testing.T) {
 	c2, _ := stub(t, 200, `{"a":`)
 	if status, _, err := c2.Request(ctx, "GET", "/x", nil); err == nil || status != 200 {
 		t.Errorf("truncated JSON: status %d err %v", status, err)
+	}
+}
+
+func TestRequestRejectsDataAfterTheJSONValue(t *testing.T) {
+	for _, body := range []string{`000`, `{"status":"healthy"} trailing`, `{}{}`} {
+		c, _ := stub(t, 200, body)
+		if _, doc, err := c.Request(context.Background(), "GET", "/x", nil); !errors.Is(err, errTrailingData) {
+			t.Errorf("%s: doc %v, err %v, want trailing-data error", body, doc, err)
+		}
+	}
+	c, _ := stub(t, 200, " {\"a\":1} \n")
+	if _, doc, err := c.Request(context.Background(), "GET", "/x", nil); err != nil || doc == nil {
+		t.Errorf("trailing whitespace: doc %v, err %v", doc, err)
 	}
 }
 
@@ -335,6 +351,24 @@ func TestGenerateOtherErrorsAreNotRefusals(t *testing.T) {
 		var apiErr *APIError
 		if errors.As(err, &refusal) || !errors.As(err, &apiErr) || apiErr.Status != reply.status {
 			t.Errorf("%d %s: err %T %v", reply.status, reply.body, err, err)
+		}
+	}
+}
+
+func TestGenerateWithoutTheXMLIsAnError(t *testing.T) {
+	for _, body := range []string{
+		`{"success":false,"message":"Validation failed: 4/5 rows valid","xml":null,"validation_errors":[{"field":"$.currency","value":"EURO"}]}`,
+		`{"success":true,"message":"Generated","xml":""}`,
+		`{}`,
+	} {
+		c, _ := stub(t, 200, body)
+		res, err := c.Generate(context.Background(), "a,b", "p.csv", "", "")
+		var apiErr *APIError
+		if res != nil || !errors.Is(err, ErrNoDocument) || errors.As(err, &apiErr) {
+			t.Errorf("%s: res %+v, err %T %v", body, res, err, err)
+		}
+		if err != nil && strings.Contains(err.Error(), "EURO") {
+			t.Errorf("the error message must not echo the rejected value: %v", err)
 		}
 	}
 }

@@ -85,7 +85,8 @@ talk to.
   HTTPS. The vendored conformance kit (kit 2) is core 0.0.87's, and its
   refusal cases need a 0.0.87 server. Before 0.0.87 the server answers
   a refused `Generate` with `200` and `success: false`, which comes back
-  as a `GenerateResponse` rather than a `*RefusalError`.
+  as an error wrapping `ErrNoDocument` rather than a `*RefusalError`,
+  so a nil error from `Generate` always comes with the XML.
 - Pure Go with no cgo, so any platform Go builds for; CI exercises
   Linux, and the tests have also run on macOS (arm64).
 
@@ -287,9 +288,11 @@ PAIN001_BASE_URL=http://127.0.0.1:8000 make check
 (cyclomatic 10) and gocognit (cognitive 15) ceilings, `go build` and
 `go test -race` with coverage; a test holds functions to 60 lines and
 files to 500. The analysers run through `go run` at pinned versions, so
-nothing is installed globally. CI adds a Go 1.26 and 1.27 matrix, a
-conformance job against `pain001 serve` installed from hash-pinned
-requirements, markdownlint and the DCO check. See
+nothing is installed globally. `go test` also runs the fuzz targets'
+seeds; `make fuzz` fuzzes each target for a minute (`FUZZTIME=30s` to
+change it). CI adds a Go 1.26 and 1.27 matrix, 30 seconds of fuzzing
+per target, a conformance job against `pain001 serve` installed from
+hash-pinned requirements, markdownlint and the DCO check. See
 [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---

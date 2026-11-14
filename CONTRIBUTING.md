@@ -41,6 +41,13 @@ real account numbers or personal data to a test.
   `MessageTypes()` matches the kit's `openapi.json`.
 - `size_test.go`: every function within 60 lines and every file within
   500.
+- `fuzz_test.go`: native Go fuzz targets that feed arbitrary statuses
+  and bodies to `Request`, the typed methods and the error mapping, and
+  check that the client never panics, returns a value or a documented
+  error, and never puts the rejected input or a refusal's findings in an
+  error message. `go test` runs their seeds and `testdata/fuzz`;
+  `make fuzz` fuzzes each for `FUZZTIME` (default 60s). Commit any
+  crashing input it writes to `testdata/fuzz` with the fix.
 
 ## The conformance kit
 
