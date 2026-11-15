@@ -17,6 +17,13 @@
 # notes, or on a Highlights section without 2 to 4 bullets.
 set -euo pipefail
 
+# SHA256SUMS is attached too, so its own hash belongs in the block.
+sums_self() {
+  local h
+  h=$( (sha256sum "$1" 2>/dev/null || shasum -a 256 "$1") | cut -d" " -f1)
+  printf "%s  SHA256SUMS\n" "$h"
+}
+
 cd "$(dirname "$0")/.."
 
 repo="${GITHUB_REPOSITORY:-sebastienrousseau/pain001-sdk-go}"
@@ -99,6 +106,7 @@ notes="$(
   echo
   echo '```text'
   cat dist/SHA256SUMS
+  sums_self dist/SHA256SUMS
   echo '```'
   echo
   if [ -n "$prev" ]; then
