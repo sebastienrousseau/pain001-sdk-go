@@ -82,7 +82,7 @@ pain001 serve --host 127.0.0.1 --port 8000
   Go team supports; the floor moves when 1.26 leaves support
   ([policy](docs/POLICIES.md#minimum-go-toolchain)).
 - **A pain001 server**, 0.0.85 or newer, reachable over HTTP or HTTPS.
-  CI tests against pain001 0.0.88, pinned in `ci/server-requirements.in`.
+  CI tests against pain001 0.0.89, pinned in `ci/server-requirements.in`.
   The vendored conformance kit (kit 2) needs 0.0.87 for its refusal
   cases: before it, a refused `Generate` comes back as an error wrapping
   `ErrNoDocument` rather than a `*RefusalError`.
