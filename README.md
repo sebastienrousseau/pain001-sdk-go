@@ -62,13 +62,8 @@
 ### As a Go library
 
 ```sh
-go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.88
+go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.89
 ```
-
-> **Not yet published.** The module has no tagged release yet; the first
-> will be 0.0.88, in lockstep with the pain001 suite. Until then the
-> command above does not resolve; use the repository directly with a
-> `replace` directive or `go get github.com/sebastienrousseau/pain001-sdk-go@main`.
 
 The module uses the Go standard library only: `go get` adds one line to
 your `go.mod` and nothing to your `go.sum` beyond this module. It needs
@@ -87,7 +82,7 @@ pain001 serve --host 127.0.0.1 --port 8000
   Go team supports; the floor moves when 1.26 leaves support
   ([policy](docs/POLICIES.md#minimum-go-toolchain)).
 - **A pain001 server**, 0.0.85 or newer, reachable over HTTP or HTTPS.
-  CI tests against pain001 0.0.88, pinned in `ci/server-requirements.in`.
+  CI tests against pain001 0.0.89, pinned in `ci/server-requirements.in`.
   The vendored conformance kit (kit 2) needs 0.0.87 for its refusal
   cases: before it, a refused `Generate` comes back as an error wrapping
   `ErrNoDocument` rather than a `*RefusalError`.

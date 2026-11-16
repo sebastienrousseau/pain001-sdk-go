@@ -7,7 +7,13 @@ out of scope. Versions move in `0.0.1` steps in lockstep with the
 pain001 suite; the maintainer opens each release, so nothing here is a
 date.
 
-## 0.0.88 (this release)
+## 0.0.89 (this release)
+
+- In lockstep with pain001 0.0.89: CI tests against it, and the
+  vendored conformance kit matches its `conformance/`.
+- The release notes' Checksums block lists `SHA256SUMS` itself.
+
+## 0.0.88 (released 2026-11-14)
 
 - First tagged release and the first one on proxy.golang.org.
 - Opt-in retries for idempotent calls (`WithRetry`, ADR 0004).

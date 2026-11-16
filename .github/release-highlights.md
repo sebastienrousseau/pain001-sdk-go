@@ -7,6 +7,5 @@ scripts/release-notes.sh. Two to four bullets, each
 Rewrite it in the release-preparation commit of every version.
 -->
 
-* **First release, in lockstep with pain001 0.0.88**: the typed Go client for `pain001 serve` is now on proxy.golang.org, held to core's conformance kit in CI against a live server.
-* **Opt-in retries for idempotent calls**: `WithRetry` retries `Health`, `Faces` and GET requests on a failed connection, `429` or `503`, with backoff and `Retry-After`. POST calls are never retried.
-* **An example and a benchmark for every method**: eleven runnable programs and client-side plus loopback benchmarks, all run in CI, with the numbers in `docs/BENCHMARKS.md`.
+* **In lockstep with pain001 0.0.89**: CI runs the client against a live pain001 0.0.89 server, and the vendored conformance kit matches core's 0.0.89 kit byte for byte.
+* **Every release asset in the checksums**: the release notes' Checksums block now lists `SHA256SUMS` itself, which 0.0.88's notes left out.
