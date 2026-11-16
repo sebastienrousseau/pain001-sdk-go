@@ -6,15 +6,24 @@ All notable changes to this project are documented in this file. The
 format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and versions advance in `0.0.1` steps in lockstep with the pain001 suite.
 
-## [Unreleased]
+## [0.0.89] - 2026-11-16
 
-## [0.0.89] - Unreleased
+In lockstep with pain001 0.0.89.
+
+### Changed
+
+- CI tests against pain001 0.0.89, the release this SDK ships with
+  (`ci/server-requirements.in`). The vendored conformance kit is
+  unchanged: core's 0.0.89 kit is byte-identical to 0.0.88's.
 
 ### Fixed
 
 - The release notes' Checksums block lists `SHA256SUMS` itself, as
   it is an attached asset; the 0.0.88 notes left it out, and the
   family's ecosystem audit requires every asset to be listed.
+- The SECURITY.md and SUPPORT.md support tables still described
+  0.0.88 as unreleased, and the README said the module was not yet
+  published; both now reflect the released versions.
 
 ## [0.0.88] - 2026-11-14
 
