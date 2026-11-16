@@ -7,7 +7,12 @@ out of scope. Versions move in `0.0.1` steps in lockstep with the
 pain001 suite; the maintainer opens each release, so nothing here is a
 date.
 
-## 0.0.89 (this release)
+## 0.0.90 (this release)
+
+- In lockstep with pain001 0.0.90: CI tests against it, a server
+  that no longer answers its first parallel requests with HTTP 500.
+
+## 0.0.89 (released 2026-11-16)
 
 - In lockstep with pain001 0.0.89: CI tests against it, and the
   vendored conformance kit matches its `conformance/`.
