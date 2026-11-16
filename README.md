@@ -62,7 +62,7 @@
 ### As a Go library
 
 ```sh
-go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.89
+go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.90
 ```
 
 The module uses the Go standard library only: `go get` adds one line to

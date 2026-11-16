@@ -13,8 +13,8 @@ pre-`1.0`, only the latest `0.0.x` receives fixes.
 
 | Version | Status | Receives fixes? |
 | :--- | :--- | :--- |
-| 0.0.89 | Current | Yes |
-| 0.0.88 | Prior | No |
+| 0.0.90 | Current | Yes |
+| 0.0.89 | Prior | No |
 
 The client is tested against the pain001 server pinned in
 `ci/server-requirements.in` (0.0.89, the latest released server).
