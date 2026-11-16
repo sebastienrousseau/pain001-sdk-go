@@ -22,7 +22,7 @@ conformance kit, the typed tests and the examples against a server you
 run, point the tests at it:
 
 ```sh
-pip install 'pain001[api]==0.0.89'
+pip install 'pain001[api]==0.0.90'
 pain001 serve --host 127.0.0.1 --port 8000 &
 PAIN001_BASE_URL=http://127.0.0.1:8000 make check
 ```
