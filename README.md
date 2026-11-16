@@ -62,13 +62,8 @@
 ### As a Go library
 
 ```sh
-go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.88
+go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.89
 ```
-
-> **Not yet published.** The module has no tagged release yet; the first
-> will be 0.0.88, in lockstep with the pain001 suite. Until then the
-> command above does not resolve; use the repository directly with a
-> `replace` directive or `go get github.com/sebastienrousseau/pain001-sdk-go@main`.
 
 The module uses the Go standard library only: `go get` adds one line to
 your `go.mod` and nothing to your `go.sum` beyond this module. It needs

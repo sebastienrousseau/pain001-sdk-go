@@ -41,7 +41,7 @@ files that cannot carry a header, and `reuse lint` runs in CI.
 git clone https://github.com/sebastienrousseau/pain001-sdk-go
 cd pain001-sdk-go
 git config gpg.ssh.allowedSignersFile KEYS.asc
-git verify-tag v0.0.88
+git verify-tag v0.0.89
 sha256sum -c SHA256SUMS   # in a directory holding the downloaded assets
 ```
 
