@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 # The user manual's build (mkdocs.yml). Regenerate the .txt with:
 #   uv pip compile --generate-hashes --python-version 3.12 ci/docs-requirements.in -o ci/docs-requirements.txt
-mkdocs-material
+# 9.8.2 fixes GHSA-wxw8-4jgj-q85j in the privacy plugin; no earlier
+# version may resolve.
+mkdocs-material>=9.8.2
