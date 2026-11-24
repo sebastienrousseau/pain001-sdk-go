@@ -8,6 +8,21 @@ and versions advance in `0.0.1` steps in lockstep with the pain001 suite.
 
 ## [Unreleased]
 
+In lockstep with pain001 0.0.91. The vendored conformance kit is
+unchanged: core's `conformance/` is identical between 0.0.90 and
+0.0.91. CI moves to the pain001 0.0.91 server once it is on PyPI.
+
+### Changed
+
+- CI actions: `actions/setup-go` 7.1.0, `github/codeql-action` 4.39.4
+  and `ossf/scorecard-action` 2.6.0, each pinned by commit SHA.
+
+### Security
+
+- The user manual builds with mkdocs-material 9.8.2, which fixes
+  GHSA-wxw8-4jgj-q85j in its privacy plugin, and
+  `ci/docs-requirements.in` now requires `>=9.8.2`.
+
 ## [0.0.90] - 2026-11-16
 
 In lockstep with pain001 0.0.90.
