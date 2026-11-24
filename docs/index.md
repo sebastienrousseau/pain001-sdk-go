@@ -15,7 +15,7 @@ shares, against a live server.
 ## Install
 
 ```sh
-go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.90
+go get github.com/sebastienrousseau/pain001-sdk-go@v0.0.91
 ```
 
 Go 1.26 or newer. The client needs a reachable pain001 server; install

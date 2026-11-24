@@ -7,7 +7,13 @@ out of scope. Versions move in `0.0.1` steps in lockstep with the
 pain001 suite; the maintainer opens each release, so nothing here is a
 date.
 
-## 0.0.90 (this release)
+## 0.0.91 (this release)
+
+- In lockstep with pain001 0.0.91: CI tests against it once core
+  0.0.91 is on PyPI, and the vendored conformance kit matches its
+  `conformance/`.
+
+## 0.0.90 (released 2026-11-16)
 
 - In lockstep with pain001 0.0.90: CI tests against it, a server
   that no longer answers its first parallel requests with HTTP 500.

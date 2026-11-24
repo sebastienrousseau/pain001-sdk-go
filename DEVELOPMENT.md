@@ -154,7 +154,7 @@ the `feat/v<version>` branch and published from a tag:
    notes, and publishes nothing.
 3. **Tag** the merged release commit on main with a signed annotated
    tag whose message is exactly `pain001-sdk-go v<version>`:
-   `git tag -s -m "pain001-sdk-go v0.0.90" v0.0.90 && git push origin v0.0.90`.
+   `git tag -s -m "pain001-sdk-go v0.0.91" v0.0.91 && git push origin v0.0.91`.
 4. **The workflow** verifies the tag (annotated, signed by a key in
    `KEYS.asc`, message, every version restatement), builds the source
    archive, the CycloneDX SBOM and `SHA256SUMS`, attests their build
