@@ -7,11 +7,11 @@ out of scope. Versions move in `0.0.1` steps in lockstep with the
 pain001 suite; the maintainer opens each release, so nothing here is a
 date.
 
-## 0.0.91 (this release)
+## 0.0.91 (released 2026-11-25)
 
-- In lockstep with pain001 0.0.91: CI tests against it once core
-  0.0.91 is on PyPI, and the vendored conformance kit matches its
-  `conformance/`.
+- In lockstep with pain001 0.0.91: CI tests against it, and the
+  vendored conformance kit matches its `conformance/`.
+- The manual builds with mkdocs-material 9.8.2 (GHSA-wxw8-4jgj-q85j).
 
 ## 0.0.90 (released 2026-11-16)
 
